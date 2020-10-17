@@ -1,0 +1,28 @@
+{
+  "name": "insteon-client",
+  "version": "0.0.1",
+  "description": "interface with insteon hub over http",
+  "main": "src/index.ts",
+  "scripts": {
+    "test": "jest",
+    "start": "tsc && node ./dist/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/drbenschmidt/insteon-client.git"
+  },
+  "keywords": [
+    "insteon",
+    "client"
+  ],
+  "author": "Ben Schmidt",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/drbenschmidt/insteon-client/issues"
+  },
+  "homepage": "https://github.com/drbenschmidt/insteon-client#readme",
+  "devDependencies": {
+    "tslint": "^6.1.3",
+    "typescript": "^4.0.3"
+  }
+}
