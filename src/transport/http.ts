@@ -1,6 +1,7 @@
 import { DeviceCommand } from '../model/device';
 import { ITransport } from './itransport';
-import { Agent, request, IncomingMessage } from 'http';
+import { Agent, request } from 'http';
+import Logger from '../utils/logger';
 
 /**
  * The Http Transport allows communication with 2245 Hubs.
@@ -15,6 +16,7 @@ import { Agent, request, IncomingMessage } from 'http';
  * or we risk running into them being dropped. A message queue is implemented to prevent this.
  */
 export default class Http implements ITransport {
+  private static log: Logger = new Logger('HTTP');
   private agent: Agent;
   private host: string;
   private port: number;
@@ -43,14 +45,17 @@ export default class Http implements ITransport {
   send(message: DeviceCommand): Promise<{ data: string; }> {
     return new Promise<{ data: string; }>((resolve, reject) => {
       const options = {
-        host: this.host,
+        hostname: this.host,
         port: this.port,
         path: '/3?' + message.raw + '=I=3',
         agent: this.agent,
         auth: this.username + ':' + this.password,
       };
+
+      Http.log.debug(`Connecting to http://${this.host}:${this.port}/3?${message.raw}=I=3`);
   
       request(options, (res) => {
+        Http.log.debug(`Response Code: ${res.statusCode}, ${res.statusMessage}`);
         if (res.statusCode !== 200) {
           reject(res.statusMessage);
           return;
@@ -58,16 +63,18 @@ export default class Http implements ITransport {
 
         let data = '';
 
-        res.on('data', function(chunk) {
+        res.on('data', (chunk) => {
           data += chunk;
         });
 
-        res.on('end', function() {
+        res.on('end', () => {
           resolve({
             data,
           });
         });
-      });
+
+        res.on('error', reject)
+      }).end();
     });
   }
 

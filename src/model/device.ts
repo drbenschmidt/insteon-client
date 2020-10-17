@@ -1,4 +1,5 @@
 import Client from '../client';
+import Logger from '../utils/logger';
 
 export function toByte(value: number, length = 1) {
   const byteValue = value.toString(16).toUpperCase();
@@ -81,6 +82,7 @@ export class DeviceMessage {
 const INSTEON_ID_REGEX = /^[0-9a-fA-F]{6}$/;
 export class InsteonId {
   private value: string;
+  private raw: string;
 
   constructor(id: string) {
     const processed = id.trim().replace(/\./g, '');
@@ -88,10 +90,15 @@ export class InsteonId {
       throw new Error(`Invalid Insteon ID: ${id} (${processed})`);
     }
     this.value = processed;
+    this.raw = id;
   }
 
   toString() {
     return this.value;
+  }
+  
+  toRawString() {
+    return this.raw;
   }
 }
 
@@ -106,6 +113,7 @@ export interface IDevice {
 export class GenericDevice implements IDevice {
   client: Client;
   id: InsteonId;
+  log: Logger;
 
   constructor(id: string, client: Client) {
     this.id = new InsteonId(id);
@@ -117,6 +125,7 @@ export class GenericDevice implements IDevice {
   }
 
   beep(): Promise<void> {
+    this.log.debug('Attempting Beep');
     const command = new DeviceCommand(this.id, {
       cmd1: '30',
       cmd2: '00',
@@ -132,5 +141,9 @@ export class GenericDevice implements IDevice {
 }
 
 export class Light extends GenericDevice {
+  constructor(id: string, client: Client) {
+    super(id, client);
 
+    this.log = new Logger(`Light ${this.id.toRawString()}`, Client.log);
+  }
 }
