@@ -2,6 +2,42 @@ import { DeviceCommand } from '../model/device';
 import { ITransport } from './itransport';
 import { Agent, request } from 'http';
 import Logger from '../utils/logger';
+import { EventEmitter } from 'events';
+import { ClientConfig } from '../model/config';
+
+class BufferLoop {
+  private loopId: NodeJS.Timeout;
+  private pollTimeoutMs: number;
+  private emitter: EventEmitter;
+  private log: Logger;
+
+  constructor(pollTimeoutMs: number, log: Logger) {
+    this.pollTimeoutMs = pollTimeoutMs;
+    this.log = new Logger('BufferLoop', log);
+  }
+
+  pipeEvents(emitter: EventEmitter) {
+    this.emitter = emitter;
+  }
+
+  start() {
+    if (this.loopId) {
+      clearTimeout(this.loopId);
+    }
+
+    this.loopId = setTimeout(this.tick.bind(this), this.pollTimeoutMs);
+  }
+
+  stop() {
+    clearTimeout(this.loopId);
+  }
+
+  tick() {
+    this.log.debug('Tick Start');
+    this.emitter.emit('tick');
+    this.start();
+  }
+}
 
 /**
  * The Http Transport allows communication with 2245 Hubs.
@@ -17,42 +53,45 @@ import Logger from '../utils/logger';
  */
 export default class Http implements ITransport {
   private static log: Logger = new Logger('HTTP');
+  private config: ClientConfig;
   private agent: Agent;
-  private host: string;
-  private port: number;
-  private username: string;
-  private password: string;
+  private emitter: EventEmitter;
+  private looper: BufferLoop;
 
-  constructor() {
+  constructor(config: ClientConfig) {
+    this.config = config;
     this.agent = new Agent({
       maxSockets: 1,  // Most important config: insteon hub does not like having tons of sockets
       keepAlive: true,
       keepAliveMsecs: 5000 // Be nice and give the socket back in 5sec.
     });
+    this.looper = new BufferLoop(5000, Http.log);
   }
 
   open(): void {
     // Start event loop to keep checking for the buffer.
-    throw new Error('Method not implemented.');
+    Http.log.debug('Starting event buffer loop');
+    this.looper.start();
   }
 
   close(): void {
-    throw new Error('Method not implemented.');
+    this.looper.stop();
   }
 
   // TODO: message queueing
   // TODO: This path might need to be changed.
   send(message: DeviceCommand): Promise<{ data: string; }> {
     return new Promise<{ data: string; }>((resolve, reject) => {
+      const { host, port, user, pass } = this.config;
       const options = {
-        hostname: this.host,
-        port: this.port,
+        hostname: host,
+        port: port,
         path: '/3?' + message.raw + '=I=3',
         agent: this.agent,
-        auth: this.username + ':' + this.password,
+        auth: user + ':' + pass,
       };
 
-      Http.log.debug(`Connecting to http://${this.host}:${this.port}/3?${message.raw}=I=3`);
+      Http.log.debug(`Connecting to http://${host}:${port}/3?${message.raw}=I=3`);
   
       request(options, (res) => {
         Http.log.debug(`Response Code: ${res.statusCode}, ${res.statusMessage}`);
@@ -68,6 +107,7 @@ export default class Http implements ITransport {
         });
 
         res.on('end', () => {
+          Http.log.debug(`Recieved: ${data}`);
           resolve({
             data,
           });
@@ -78,10 +118,8 @@ export default class Http implements ITransport {
     });
   }
 
-  init(host: string, port: number, username: string, password: string): void {
-    this.host = host;
-    this.port = port;
-    this.username = username;
-    this.password = password;
+  pipeEvents(emitter: EventEmitter): void {
+    this.emitter = emitter;
+    this.looper.pipeEvents(emitter);
   }
 }

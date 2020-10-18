@@ -146,4 +146,19 @@ export class Light extends GenericDevice {
 
     this.log = new Logger(`Light ${this.id.toRawString()}`, Client.log);
   }
+
+  info(): Promise<void> {
+    this.log.debug('Attempting Info');
+    const command = new DeviceCommand(this.id, {
+      cmd1: '19',
+      cmd2: '00',
+      extended: false,
+      type: '',
+      userData: [],
+      crc: null,
+      checksum: null,
+    });
+
+    return this.client.sendCommand(command);
+  }
 }
