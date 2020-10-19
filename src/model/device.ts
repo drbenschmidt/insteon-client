@@ -24,6 +24,19 @@ export function genCrc(cmd: string) {
   return toByte(crc, 2);
 }
 
+export class DeviceCommandRequest {
+  success: boolean;
+  command: DeviceCommandOptions;
+  ack: boolean;
+  nack: boolean;
+  callback: Function;
+
+  constructor(command: DeviceCommandOptions, callback: Function) {
+    this.command = command;
+    this.callback = callback;
+  }
+}
+
 export type DeviceCommandOptions = {
   type: string;
   extended: boolean;
@@ -32,11 +45,14 @@ export type DeviceCommandOptions = {
   cmd2: string;
   crc: unknown;
   checksum: unknown;
+  raw?: string; // TODO: UGLY.
+  exitOnAck: boolean;
 }
 
 export class DeviceCommand {
   raw: string;
   destinationId: InsteonId;
+  command: DeviceCommandOptions;
 
   constructor(destinationId: InsteonId, cmd: DeviceCommandOptions) {
     this.destinationId = destinationId;
@@ -68,6 +84,8 @@ export class DeviceCommand {
     }
 
     this.raw = `02${type}${this.destinationId}${flags}${cmd.cmd1}${cmd.cmd2}${userData}`;
+    this.command = cmd;
+    this.command.raw = this.raw;
   }
 }
 
@@ -134,6 +152,7 @@ export class GenericDevice implements IDevice {
       userData: [],
       crc: null,
       checksum: null,
+      exitOnAck: true,
     });
 
     return this.client.sendCommand(command);
@@ -157,6 +176,7 @@ export class Light extends GenericDevice {
       userData: [],
       crc: null,
       checksum: null,
+      exitOnAck: true,
     });
 
     return this.client.sendCommand(command);

@@ -47,6 +47,7 @@ class AsyncLoop {
       await this.onTick();
     } catch (e) {
       this.log.debug(`onTick error: ${e.message}`);
+      console.error(e);
     } finally {
       this.start();
     }
@@ -120,9 +121,6 @@ export default class Http implements ITransport {
       // insteon.buffer += result;
       // insteon.checkStatus();
       // currentDelay = 100;
-    } else {
-      Http.log.debug(`bad buffer, result: ${result}`);
-      Http.log.debug(`bad buffer, raw: ${raw}`);
     }
 
     if (raw.length > 30) {
