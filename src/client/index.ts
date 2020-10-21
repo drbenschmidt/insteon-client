@@ -5,11 +5,13 @@ import Logger from '../utils/logger';
 import { EventEmitter } from 'events'
 import { ClientConfig } from '../model/config';
 import MessageHandler from './message-handler';
+import Mutex from '../utils/mutex';
 
 export default class Client extends EventEmitter {
   private transport: ITransport;
   private messageHandler: MessageHandler = new MessageHandler();
   static log: Logger = new Logger('Client');
+  private sendCommandMutex = new Mutex();
 
   constructor(transport: ITransport) {
     super();
@@ -34,12 +36,14 @@ export default class Client extends EventEmitter {
   }
 
   async sendCommand(command: DeviceCommand) {
-    const request = new DeviceCommandRequest(command.command, (resp: any) => {
-      Client.log.debug(`Gottem! ${JSON.stringify(resp)}`);
+    return this.sendCommandMutex.dispatch(async () => {
+      const request = new DeviceCommandRequest(command.command, (resp: any) => {
+        Client.log.debug(`Gottem! ${JSON.stringify(resp)}`);
+      });
+  
+      this.messageHandler.setRequest(request);
+      await this.transport.send(command);
     });
-
-    this.messageHandler.setRequest(request);
-    await this.transport.send(command);
   }
 
   getDevice(id: string): Light {

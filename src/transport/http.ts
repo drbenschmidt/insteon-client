@@ -4,54 +4,30 @@ import { Agent, request } from 'http';
 import Logger from '../utils/logger';
 import { EventEmitter } from 'events';
 import { ClientConfig } from '../model/config';
+import AsyncLoop from '../utils/async-loop';
+import Mutex from '../utils/mutex';
 
-class AsyncLoop {
-  private loopId: NodeJS.Timeout;
-  private pollTimeoutMs: number;
-  private emitter: EventEmitter;
-  private log: Logger;
-  private onTick: Function;
+class AsyncLock {
+  num: number = 1;
+  promise: Promise<void> = Promise.resolve();
 
-  constructor(pollTimeoutMs: number, log: Logger, onTick: Function) {
-    this.pollTimeoutMs = pollTimeoutMs;
-    this.log = new Logger('BufferLoop', log);
-    this.onTick = onTick;
-  }
+  acquire = async () => {
+    const { num } = this;
+    this.num++;
 
-  pipeEvents(emitter: EventEmitter) {
-    this.emitter = emitter;
-  }
+    console.log(`awaiting promise ${num}`);
+    await this.promise;
+    console.log(`promise resolved ${num}`);
 
-  start() {
-    if (this.loopId) {
-      clearTimeout(this.loopId);
-    }
+    this.promise = new Promise(resolve => {
+      this.release = () => {
+        console.log(`releasing lock ${num}`);
+        resolve();
+      };
+    });
+  };
 
-    this.loopId = setTimeout(this.tick, this.pollTimeoutMs);
-  }
-
-  stop() {
-    clearTimeout(this.loopId);
-  }
-
-  scheduleIn(timeoutMs: number) {
-    this.log.debug(`forcing tick in ${timeoutMs}ms`);
-    clearTimeout(this.loopId);
-
-    this.loopId = setTimeout(this.tick, timeoutMs);
-  }
-
-  tick = async () => {
-    this.log.debug('Tick Start');
-    try {
-      await this.onTick();
-    } catch (e) {
-      this.log.debug(`onTick error: ${e.message}`);
-      console.error(e);
-    } finally {
-      this.start();
-    }
-  }
+  release = () => {};
 }
 
 /**
@@ -73,6 +49,8 @@ export default class Http implements ITransport {
   private emitter: EventEmitter;
   private looper: AsyncLoop;
   private knownBufferPage: string = '';
+  private lock: AsyncLock = new AsyncLock();
+  private mutex = new Mutex();
 
   constructor(config: ClientConfig) {
     this.config = config;
@@ -81,17 +59,18 @@ export default class Http implements ITransport {
       keepAlive: true,
       keepAliveMsecs: 5000 // Be nice and give the socket back in 5sec.
     });
-    this.looper = new AsyncLoop(5000, Http.log, this.fetchBuf);
+    //this.looper = new AsyncLoop(5000, Http.log, this.fetchBuf);
   }
 
   open(): void {
     // Start event loop to keep checking for the buffer.
-    Http.log.debug('Starting event buffer loop');
-    this.looper.start();
+    // Http.log.debug('Starting event buffer loop');
+    // this.looper.start();
   }
 
   close(): void {
-    this.looper.stop();
+    // TODO: This should just check the buffer one last time and respond to any remaining messages.
+    // this.looper.stop();
   }
 
   fetchBuf = async () => {
@@ -136,42 +115,53 @@ export default class Http implements ITransport {
     });
   }
 
-  private httpGet(requestOptions: any): Promise<{ data: string; }> {
-    const { host, port, user, pass } = this.config;
-    const options = {
-      hostname: host,
-      port: port,
-      agent: this.agent,
-      auth: user + ':' + pass,
-      path: '',
-      ...requestOptions,
-    };
+  private async httpGet(requestOptions: any): Promise<{ data: string; }> {
+    return this.mutex.dispatch(async () => {
+      const { host, port, user, pass } = this.config;
+      const options = {
+        hostname: host,
+        port: port,
+        agent: this.agent,
+        auth: user + ':' + pass,
+        path: '',
+        ...requestOptions,
+      };
 
-    Http.log.debug(`Connecting to http://${host}:${port}/${options.path}`);
+      Http.log.debug(`Connecting to http://${host}:${port}/${options.path}`);
 
-    return new Promise((resolve, reject) => {
-      request(options, (res) => {
-        Http.log.debug(`Response Code: ${res.statusCode}, ${res.statusMessage}`);
-        if (res.statusCode !== 200) {
-          reject(res.statusMessage);
-          return;
-        }
+      return new Promise((resolve, reject) => {
+        const reso = (...args: any[]) => {
+          //this.lock.release();
+          resolve(...args);
+        };
+        const rej = (...args: any[]) => {
+          //this.lock.release();
+          reject(...args);
+        };
 
-        let data = '';
+        request(options, (res) => {
+          Http.log.debug(`Response Code: ${res.statusCode}, ${res.statusMessage}`);
+          if (res.statusCode !== 200) {
+            rej(res.statusMessage);
+            return;
+          }
 
-        res.on('data', (chunk) => {
-          data += chunk;
-        });
+          let data = '';
 
-        res.on('end', () => {
-          Http.log.debug(`Recieved: ${data}`);
-          resolve({
-            data,
+          res.on('data', (chunk) => {
+            data += chunk;
           });
-        });
 
-        res.on('error', reject)
-      }).end();
+          res.on('end', () => {
+            Http.log.debug(`Recieved: ${data}`);
+            reso({
+              data,
+            });
+          });
+
+          res.on('error', rej)
+        }).end();
+      });
     });
   }
 
@@ -184,13 +174,15 @@ export default class Http implements ITransport {
 
     const result = await this.httpGet(options);
 
-    this.looper.scheduleIn(50);
+    // Schedule this 50ms after to allow the hub time
+    // to get it's ducks in a row.
+    setTimeout(this.fetchBuf, 50);
 
     return result;
   }
 
   pipeEvents(emitter: EventEmitter): void {
     this.emitter = emitter;
-    this.looper.pipeEvents(emitter);
+    // this.looper.pipeEvents(emitter);
   }
 }
