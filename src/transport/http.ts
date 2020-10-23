@@ -30,6 +30,7 @@ class AsyncLock {
   release = () => {};
 }
 
+
 /**
  * The Http Transport allows communication with 2245 Hubs.
  * The gist of it is, commands are sent to a known endpoint which responds with
@@ -47,11 +48,10 @@ export default class Http implements ITransport {
   private config: ClientConfig;
   private agent: Agent;
   private emitter: EventEmitter;
-  private looper: AsyncLoop;
   private knownBufferPage: string = '';
-  private lock: AsyncLock = new AsyncLock();
   private mutex = new Mutex();
-
+  private listen: Boolean = false;
+  
   constructor(config: ClientConfig) {
     this.config = config;
     this.agent = new Agent({
@@ -59,7 +59,9 @@ export default class Http implements ITransport {
       keepAlive: true,
       keepAliveMsecs: 5000 // Be nice and give the socket back in 5sec.
     });
-    //this.looper = new AsyncLoop(5000, Http.log, this.fetchBuf);
+  }
+  setListen(val: Boolean): void {
+    this.listen = val;
   }
 
   open(): void {
@@ -83,10 +85,10 @@ export default class Http implements ITransport {
     // in lieu of using an XML parser adding another library dependency, we will
     // just use a bit of regex to parse it.
     let raw = /BS>([^<]+)<\/BS/g.exec(data)[1];
-    Http.log.debug(`Raw response (length ${raw.length}): ${raw}`);
     if (raw.length === 202) {
       // The last 2 bytes are the length of 'good' data
       const length = parseInt(raw.substr(200), 16);
+      Http.log.debug(`Raw response (length ${length})`);
       raw = raw.substring(0, length);
     }
     let result = raw;
@@ -95,7 +97,7 @@ export default class Http implements ITransport {
     }
     this.knownBufferPage = raw;
     if (result.length) {
-      Http.log.debug(`good buffer: ${result}`);
+      Http.log.debug(`good buffer length: ${raw.length}`);
       this.emitter.emit('buffer', result);
       // insteon.buffer += result;
       // insteon.checkStatus();
@@ -103,7 +105,11 @@ export default class Http implements ITransport {
     }
 
     if (raw.length > 30) {
-      return this.clearBuffer();
+      await this.clearBuffer();
+    }
+
+    if (this.listen) {
+      setTimeout(this.fetchBuf, 50);
     }
   };
 
@@ -127,22 +133,13 @@ export default class Http implements ITransport {
         ...requestOptions,
       };
 
-      Http.log.debug(`Connecting to http://${host}:${port}/${options.path}`);
+      Http.log.debug(`Connecting to http://${host}:${port}${options.path}`);
 
       return new Promise((resolve, reject) => {
-        const reso = (...args: any[]) => {
-          //this.lock.release();
-          resolve(...args);
-        };
-        const rej = (...args: any[]) => {
-          //this.lock.release();
-          reject(...args);
-        };
-
         request(options, (res) => {
           Http.log.debug(`Response Code: ${res.statusCode}, ${res.statusMessage}`);
           if (res.statusCode !== 200) {
-            rej(res.statusMessage);
+            reject(res.statusMessage);
             return;
           }
 
@@ -153,13 +150,13 @@ export default class Http implements ITransport {
           });
 
           res.on('end', () => {
-            Http.log.debug(`Recieved: ${data}`);
-            reso({
+            // Http.log.debug(`Recieved: ${data}`);
+            resolve({
               data,
             });
           });
 
-          res.on('error', rej)
+          res.on('error', reject)
         }).end();
       });
     });

@@ -26,13 +26,16 @@ export function genCrc(cmd: string) {
 
 export class DeviceCommandRequest {
   success: boolean;
+  _command: DeviceCommand;
   command: DeviceCommandOptions;
   ack: boolean;
   nack: boolean;
   callback: Function;
+  response: InsteonResponse;
 
-  constructor(command: DeviceCommandOptions, callback: Function) {
-    this.command = command;
+  constructor(command: DeviceCommand, callback: Function) {
+    this._command = command;
+    this.command = command.command;
     this.callback = callback;
   }
 }
@@ -142,7 +145,7 @@ export class GenericDevice implements IDevice {
     throw new Error('Method not implemented.');
   }
 
-  beep(): Promise<void> {
+  async beep(): Promise<void> {
     this.log.debug('Attempting Beep');
     const command = new DeviceCommand(this.id, {
       cmd1: '30',
@@ -155,7 +158,23 @@ export class GenericDevice implements IDevice {
       exitOnAck: true,
     });
 
-    return this.client.sendCommand(command);
+    await this.client.sendCommand(command);
+  }
+}
+
+interface InsteonResponseStandard {
+  command2: string;
+}
+
+export interface InsteonResponse {
+  standard: InsteonResponseStandard;
+}
+
+class InfoResponse {
+  level: number;
+
+  constructor(response: InsteonResponse) {
+    this.level = Math.ceil(parseInt(response.standard.command2, 16) * 100 / 255);
   }
 }
 
@@ -166,7 +185,7 @@ export class Light extends GenericDevice {
     this.log = new Logger(`Light ${this.id.toRawString()}`, Client.log);
   }
 
-  info(): Promise<void> {
+  async info(): Promise<InfoResponse> {
     this.log.debug('Attempting Info');
     const command = new DeviceCommand(this.id, {
       cmd1: '19',
@@ -176,9 +195,11 @@ export class Light extends GenericDevice {
       userData: [],
       crc: null,
       checksum: null,
-      exitOnAck: true,
+      exitOnAck: false, // There's another response we want.
     });
 
-    return this.client.sendCommand(command);
+    const response = await this.client.sendCommand(command);
+
+    return new InfoResponse(response);
   }
 }

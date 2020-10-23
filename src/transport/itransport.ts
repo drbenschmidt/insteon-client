@@ -6,4 +6,5 @@ export interface ITransport {
   open(): void;
   close(): void;
   send(message: DeviceCommand): Promise<{ data: string; }>;
+  setListen(val: Boolean): void;
 }
