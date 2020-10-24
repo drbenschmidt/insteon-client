@@ -13,7 +13,7 @@ const sleep = (ms: number) => new Promise(res => setTimeout(res, ms));
   const light = client.getDevice('56.21.93');
 
   light.getLevel().then(value => console.log(`Dinette Light Level: ${value.level}`));
-  light.setLevel(100);
+  light.setLevel(65);
 
   await sleep(5000);
 })().catch(console.error);

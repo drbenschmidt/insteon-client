@@ -4,7 +4,7 @@ import { Light, InsteonResponse } from '../model/device';
 import Logger from '../utils/logger';
 import { EventEmitter } from 'events'
 import { ClientConfig } from '../model/config';
-import MessageHandler from './message-handler';
+import MessageHandler from './messaging/handler';
 import Mutex from '../utils/mutex';
 
 const sleep = (ms: number) => new Promise(res => setTimeout(res, ms));

@@ -8,7 +8,7 @@ export function levelToHexByte(level: number) {
   // scale level to a max of 0xFF (255)
   level = ~~ (255 * level / 100);
 
-  return toByte(level);
+  return toByte(level, 2);
 }
 
 export function toByte(value: number, length = 1) {
