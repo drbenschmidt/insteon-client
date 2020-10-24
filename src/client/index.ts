@@ -1,11 +1,13 @@
-import { DeviceCommand, DeviceCommandRequest } from '../model/device';
 import { ITransport } from '../transport/itransport';
-import { Light, InsteonResponse } from '../model/device';
 import Logger from '../utils/logger';
 import { EventEmitter } from 'events'
 import { ClientConfig } from '../model/config';
 import MessageHandler from './messaging/handler';
 import Mutex from '../utils/mutex';
+import DeviceCommand from '../model/api/device-command';
+import DeviceCommandRequest from '../model/api/device-command-request';
+import { InsteonResponse } from '../model/api/response/insteon-response';
+import Light from '../model/device/light';
 
 const sleep = (ms: number) => new Promise(res => setTimeout(res, ms));
 

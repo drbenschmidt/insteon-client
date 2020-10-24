@@ -1,4 +1,4 @@
-import { DeviceCommandRequest } from '../../model/device';
+import DeviceCommandRequest from '../../model/api/device-command-request';
 import Logger from '../../utils/logger';
 import { MessageType } from './constants';
 import { Handlers } from './handlers';

@@ -1,35 +1,10 @@
-import { DeviceCommand } from '../model/device';
+import DeviceCommand from '../model/api/device-command';
 import { ITransport } from './itransport';
 import { Agent, request } from 'http';
 import Logger from '../utils/logger';
 import { EventEmitter } from 'events';
 import { ClientConfig } from '../model/config';
-import AsyncLoop from '../utils/async-loop';
 import Mutex from '../utils/mutex';
-
-class AsyncLock {
-  num: number = 1;
-  promise: Promise<void> = Promise.resolve();
-
-  acquire = async () => {
-    const { num } = this;
-    this.num++;
-
-    console.log(`awaiting promise ${num}`);
-    await this.promise;
-    console.log(`promise resolved ${num}`);
-
-    this.promise = new Promise(resolve => {
-      this.release = () => {
-        console.log(`releasing lock ${num}`);
-        resolve();
-      };
-    });
-  };
-
-  release = () => {};
-}
-
 
 /**
  * The Http Transport allows communication with 2245 Hubs.

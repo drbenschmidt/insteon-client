@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events';
-import { DeviceCommand } from '../model/device';
+import DeviceCommand from '../model/api/device-command';
 
 export interface ITransport {
   pipeEvents(emitter: EventEmitter): void;
