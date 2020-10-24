@@ -39,17 +39,23 @@ export default class Client extends EventEmitter {
 
   async sendCommand(command: DeviceCommand): Promise<InsteonResponse> {
     return this.sendCommandMutex.dispatch(async () => {
-      await sleep(1000);
+      // This helps prevent weird issues with getting messages after sending them.
+      await sleep(100);
 
+      // TODO: add reject logic for errors.
       return new Promise((resolve, reject) => {
         const request = new DeviceCommandRequest(command, (request: DeviceCommandRequest) => {
           this.transport.setListen(false);
           resolve(request.response);
         });
     
+        // Set the request to the message handler so it knows what we're processing.
         this.messageHandler.setRequest(request);
 
+        // Tell the transport layer that we're expecting more than one response.
         this.transport.setListen(true);
+
+        // Send the command!
         this.transport.send(command);
       });
     });

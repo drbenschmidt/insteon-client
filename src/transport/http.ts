@@ -60,7 +60,9 @@ export default class Http implements ITransport {
       keepAliveMsecs: 5000 // Be nice and give the socket back in 5sec.
     });
   }
+
   setListen(val: Boolean): void {
+    Http.log.debug(`listening ${val}`);
     this.listen = val;
   }
 

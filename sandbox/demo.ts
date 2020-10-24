@@ -10,13 +10,10 @@ const sleep = (ms: number) => new Promise(res => setTimeout(res, ms));
     port: 25105,
   });
 
-  // client.on('buffer', (buf) => console.log('buffer added', buf));
-
   const light = client.getDevice('56.21.93');
 
-  light.info().then(value => console.log('1', value.level));
-  light.info().then(value => console.log('2', value.level));
-  light.info().then(value => console.log('3', value.level));
+  light.getLevel().then(value => console.log(`Dinette Light Level: ${value.level}`));
+  light.setLevel(100);
 
   await sleep(5000);
 })().catch(console.error);

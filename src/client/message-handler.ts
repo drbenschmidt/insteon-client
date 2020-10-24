@@ -178,7 +178,10 @@ export default class MessageHandler {
   }
   
   decode = (bufferIn?: string) => {
-    this.buffer += bufferIn
+    if (bufferIn?.length > 0) {
+      this.buffer += bufferIn
+    }
+
     var result; // Just trying to be careful and suss out every single path
     var raw = this.buffer;
     MessageHandler.log.debug(`decode - buffer: ${raw}`);
@@ -186,7 +189,7 @@ export default class MessageHandler {
     MessageHandler.log.debug(`decode - status: ${status}`);
 
     // check for gateway NAK
-    if (raw.substr(0, 2) === '15' && this.currentRequest && this.timeout) {
+    if (raw.substr(0, 2) === '15' && this.currentRequest /*&& this.timeout*/) {
       // Got a PLM NAK; retry our command, if applicable
       /*var gw = this;
       var nakTimeout = this.status.nakTimeout;
@@ -196,9 +199,9 @@ export default class MessageHandler {
       this.timeout = setTimeout(function () {
         sendCommandTimout(gw, gw.status.timeout, gw.commandRetries);
       }, nakTimeout);
-
-      this.buffer = raw.substr(2);
       */
+      this.buffer = raw.substr(2);
+      
       // TODO: Handle gateway NAK.
 
       return MESSAGES.PROCESSED;

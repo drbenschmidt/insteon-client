@@ -1,10 +1,18 @@
 import Client from '../client';
 import Logger from '../utils/logger';
 
+export function levelToHexByte(level: number) {
+  if (level < 0 || level > 100) {
+    throw new Error('level must be between 0 and 100');
+  }
+  // scale level to a max of 0xFF (255)
+  level = ~~ (255 * level / 100);
+
+  return toByte(level);
+}
+
 export function toByte(value: number, length = 1) {
-  const byteValue = value.toString(16).toUpperCase();
-  const pad = new Array((length * 2) + 1).join('0');
-  return pad.substring(0, pad.length - byteValue.length) + value;
+  return value.toString(16).toUpperCase().padStart(length, '0');
 }
 
 export function genCrc(cmd: string) {
@@ -170,7 +178,7 @@ export interface InsteonResponse {
   standard: InsteonResponseStandard;
 }
 
-class InfoResponse {
+class LevelResponse {
   level: number;
 
   constructor(response: InsteonResponse) {
@@ -185,8 +193,26 @@ export class Light extends GenericDevice {
     this.log = new Logger(`Light ${this.id.toRawString()}`, Client.log);
   }
 
-  async info(): Promise<InfoResponse> {
-    this.log.debug('Attempting Info');
+  async setLevel(value: number): Promise<void> {
+    this.log.debug(`setLevel(${value})`);
+
+    const command = new DeviceCommand(this.id, {
+      cmd1: '21',
+      cmd2: levelToHexByte(value),
+      extended: false,
+      type: '',
+      userData: [],
+      crc: null,
+      checksum: null,
+      exitOnAck: true,
+    });
+
+    await this.client.sendCommand(command);
+  }
+
+  async getLevel(): Promise<LevelResponse> {
+    this.log.debug('getLevel');
+
     const command = new DeviceCommand(this.id, {
       cmd1: '19',
       cmd2: '00',
@@ -200,6 +226,6 @@ export class Light extends GenericDevice {
 
     const response = await this.client.sendCommand(command);
 
-    return new InfoResponse(response);
+    return new LevelResponse(response);
   }
 }
