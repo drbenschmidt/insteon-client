@@ -1,7 +1,6 @@
 import { Client } from '../src'
 import { LogLevel } from '../src/utils/logger';
-
-const sleep = (ms: number) => new Promise(res => setTimeout(res, ms));
+import sleep from '../src/utils/sleep';
 
 (async () => {
   const client = await Client.createFor2245({

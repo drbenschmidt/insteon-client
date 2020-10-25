@@ -108,7 +108,7 @@ export default class Http implements ITransport {
         ...requestOptions,
       };
 
-      this.log.debug(`Connecting to http://${host}:${port}${options.path}`);
+      this.log.debug(`GET request to http://${host}:${port}${options.path}`);
 
       return new Promise((resolve, reject) => {
         request(options, (res) => {

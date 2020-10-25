@@ -8,8 +8,7 @@ import DeviceCommand from '../model/api/device-command';
 import DeviceCommandRequest from '../model/api/device-command-request';
 import { InsteonResponse } from '../model/api/response/insteon-response';
 import Light from '../model/device/light';
-
-const sleep = (ms: number) => new Promise(res => setTimeout(res, ms));
+import sleep from '../utils/sleep';
 
 export type ClientProps = {
   transport: ITransport;

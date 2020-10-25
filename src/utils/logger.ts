@@ -1,6 +1,3 @@
-// TODO: Add support for levels, and cool stuff.
-// For now, just make it prefixable.
-
 export enum LogLevel {
   Debug = 4,
   Info = 3,
