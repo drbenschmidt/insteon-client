@@ -7,15 +7,17 @@ export enum LogLevel {
 
 export default class Logger {
   private prefix: string;
+
   private parent: Logger;
+
   private level: LogLevel;
 
-  constructor(prefix: string, parent: Logger = null, level: LogLevel = null) {
+  constructor(prefix: string, parent?: Logger, level?: LogLevel) {
     this.prefix = prefix;
     this.parent = parent;
 
     if (level === null && parent !== null) {
-      this.level = parent.level
+      this.level = parent.level;
     } else {
       this.level = level ?? LogLevel.Info;
     }
@@ -26,33 +28,43 @@ export default class Logger {
       return;
     }
 
-    let logFunc = null;
+    let logFunction;
 
     switch (level) {
       case LogLevel.Debug:
-        logFunc = this.parent?.debug ?? console.debug;
-      break;
+        logFunction = this.parent?.debug ?? console.debug;
+        break;
 
       case LogLevel.Info:
-        logFunc = this.parent?.info ?? console.info;
-      break;
+        logFunction = this.parent?.info ?? console.info;
+        break;
 
       case LogLevel.Warn:
-        logFunc = this.parent?.warn ?? console.warn;
-      break;
+        logFunction = this.parent?.warn ?? console.warn;
+        break;
 
       case LogLevel.Error:
-        logFunc = this.parent?.error ?? console.error;
-      break;
+        logFunction = this.parent?.error ?? console.error;
+        break;
+
+      default:
+        break;
     }
 
-    const msg = `[${this.prefix}] ${message}`;
+    const formattedMessage = `[${this.prefix}] ${message}`;
 
-    logFunc?.(msg, ...rest);
+    logFunction?.(formattedMessage, ...rest);
   }
 
-  debug = (message: string, ...rest: any[]) => this.log(LogLevel.Debug, message, ...rest);
-  info = (message: string, ...rest: any[]) => this.log(LogLevel.Info, message, ...rest);
-  warn = (message: string, ...rest: any[]) => this.log(LogLevel.Warn, message, ...rest);
-  error = (message: string, ...rest: any[]) => this.log(LogLevel.Error, message, ...rest);
+  debug = (message: string, ...rest: any[]) =>
+    this.log(LogLevel.Debug, message, ...rest);
+
+  info = (message: string, ...rest: any[]) =>
+    this.log(LogLevel.Info, message, ...rest);
+
+  warn = (message: string, ...rest: any[]) =>
+    this.log(LogLevel.Warn, message, ...rest);
+
+  error = (message: string, ...rest: any[]) =>
+    this.log(LogLevel.Error, message, ...rest);
 }

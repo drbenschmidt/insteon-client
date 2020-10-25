@@ -3,14 +3,18 @@ import Logger from "./logger";
 
 export default class AsyncLoop {
   private loopId: NodeJS.Timeout;
+
   private pollTimeoutMs: number;
+
   private emitter: EventEmitter;
+
   private log: Logger;
+
   private onTick: Function;
 
   constructor(pollTimeoutMs: number, log: Logger, onTick: Function) {
     this.pollTimeoutMs = pollTimeoutMs;
-    this.log = new Logger('BufferLoop', log);
+    this.log = new Logger("BufferLoop", log);
     this.onTick = onTick;
   }
 
@@ -38,14 +42,14 @@ export default class AsyncLoop {
   }
 
   tick = async () => {
-    this.log.debug('Tick Start');
+    this.log.debug("Tick Start");
     try {
       await this.onTick();
-    } catch (e) {
-      this.log.debug(`onTick error: ${e.message}`);
-      console.error(e);
+    } catch (error) {
+      this.log.debug(`onTick error: ${error.message}`);
+      console.error(error);
     } finally {
       this.start();
     }
-  }
+  };
 }

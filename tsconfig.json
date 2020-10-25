@@ -4,9 +4,10 @@
     ],
     "compilerOptions": {
       "resolveJsonModule": true,
+      "esModuleInterop": true,
       "rootDir": "./",
-      "target": "ES5",
-      "module": "esnext",
+      "target": "es6",
+      "module": "commonjs",
       "moduleResolution": "node",
       "experimentalDecorators": true,
       "allowJs": true,

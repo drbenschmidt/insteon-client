@@ -1,4 +1,4 @@
-import Client from "../../client";
+import type Client from "../../client";
 import InsteonId from "../api/insteon-id";
 
 export interface IDevice {

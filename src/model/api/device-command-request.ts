@@ -4,11 +4,17 @@ import DeviceCommandOptions from "./device-command-options";
 
 export default class DeviceCommandRequest {
   success: boolean;
+
   _command: DeviceCommand;
+
   command: DeviceCommandOptions;
+
   ack: boolean;
+
   nack: boolean;
+
   callback: Function;
+
   response: InsteonResponse;
 
   constructor(command: DeviceCommand, callback: Function) {

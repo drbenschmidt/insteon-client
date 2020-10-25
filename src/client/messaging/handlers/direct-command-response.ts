@@ -1,17 +1,18 @@
-import type MessageHandler from '../handler';
-import { IDispatcher } from './idispatcher';
-import { DispatcherBase } from './dispatcher-base';
-import { MessageType } from '../constants';
+import type MessageHandler from "../handler";
+import { IDispatcher } from "./idispatcher";
+import DispatcherBase from "./dispatcher-base";
+import { MessageType } from "../constants";
 
 export default class Dispatcher extends DispatcherBase {
-  id: string = '0262';
-  name: string = 'Direct Command Response';
+  id = "0262";
 
-  register(map: Map<String, IDispatcher>): void {
+  name = "Direct Command Response";
+
+  register(map: Map<string, IDispatcher>): void {
     map.set(this.id, this);
   }
-  
-  checkSize(handler: MessageHandler, raw: string): string | Boolean {
+
+  checkSize(handler: MessageHandler, raw: string): string | boolean {
     // Under 12 characters, we don't have the flags byte, so we need more.
     if (raw.length < 12) {
       return false;
@@ -20,17 +21,17 @@ export default class Dispatcher extends DispatcherBase {
     // The interesting thing about an 0262 is it's a variable length response.
     // So unlike the other responses, we need to get to the message flags byte to know
     // whether it's a standard (18 hex chars) or extended (46 hex chars) response.
-    var flags = parseInt(raw.substr(10, 2), 16);
-    var isExtended = (flags & 0x10) !== 0;
-    var expectedLength = isExtended ? 46 : 18;
+    const flags = Number.parseInt(raw.slice(10, 12), 16);
+    const isExtended = (flags & 0x10) !== 0;
+    const expectedLength = isExtended ? 46 : 18;
 
     if (raw.length < expectedLength) {
       return false;
     }
 
-    handler.buffer = raw.substr(expectedLength);
+    handler.buffer = raw.slice(expectedLength);
 
-    return raw.substr(0, expectedLength);
+    return raw.slice(0, Math.max(0, expectedLength));
   }
 
   handle(handler: MessageHandler, raw: string, status: any): MessageType {
@@ -38,13 +39,17 @@ export default class Dispatcher extends DispatcherBase {
       return MessageType.SKIPPED;
     }
 
-    /*this.emit('recvCommand', {
+    /* this.emit('recvCommand', {
       type: '62',
       raw: raw.substr(0, status.command.raw.length + 2)
-    });*/
+    }); */
 
-    status.ack = raw.substr(status.command.raw.length, 2) === '06';
-    status.nack = raw.substr(status.command.raw.length, 2) === '15';
+    status.ack =
+      raw.slice(status.command.raw.length, status.command.raw.length + 2) ===
+      "06";
+    status.nack =
+      raw.slice(status.command.raw.length, status.command.raw.length + 2) ===
+      "15";
 
     return MessageType.PROCESSED;
   }
