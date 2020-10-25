@@ -1,6 +1,6 @@
-import { Client } from '../src'
-import { LogLevel } from '../src/utils/logger';
-import sleep from '../src/utils/sleep';
+import { Client } from "../src";
+import { LogLevel } from "../src/utils/logger";
+import sleep from "../src/utils/sleep";
 
 (async () => {
   const client = await Client.createFor2245({
@@ -11,7 +11,7 @@ import sleep from '../src/utils/sleep';
     logLevel: LogLevel.Info,
   });
 
-  const light = client.getDevice('56.21.93');
+  const light = client.getDevice("56.21.93");
 
   const { level } = await light.getLevel();
   light.setLevel(level === 65 ? 0 : 65);

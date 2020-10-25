@@ -5,7 +5,9 @@
   "main": "src/index.ts",
   "scripts": {
     "test": "jest",
-    "start:demo": "ts-node-dev sandbox/demo.ts"
+    "start:demo": "ts-node-dev sandbox/demo.ts",
+    "lint": "eslint -c .eslintrc.js",
+    "tslint-check": "tslint-config-prettier-check ./tslint.json"
   },
   "repository": {
     "type": "git",
@@ -23,9 +25,20 @@
   "homepage": "https://github.com/drbenschmidt/insteon-client#readme",
   "devDependencies": {
     "@types/node": "^14.11.10",
+    "@typescript-eslint/eslint-plugin": "^4.5.0",
+    "@typescript-eslint/parser": "^4.5.0",
+    "eslint": "^7.12.0",
+    "eslint-config-airbnb-base": "^14.2.0",
+    "eslint-config-airbnb-typescript": "^12.0.0",
+    "eslint-config-prettier": "^6.14.0",
+    "eslint-plugin-import": "^2.22.1",
+    "eslint-plugin-jsdoc": "^30.7.3",
+    "eslint-plugin-prefer-arrow": "^1.2.2",
+    "eslint-plugin-prettier": "^3.1.4",
+    "eslint-plugin-unicorn": "^23.0.0",
+    "prettier": "^2.1.2",
     "ts-node": "^9.0.0",
     "ts-node-dev": "^1.0.0",
-    "tslint": "^6.1.3",
     "typescript": "^4.0.3"
   }
 }
