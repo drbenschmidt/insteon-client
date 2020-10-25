@@ -37,7 +37,8 @@ export default class DeviceCommand {
       }
     }
 
-    this.raw = `02${type}${this.destinationId}${flags}${cmd.cmd1}${cmd.cmd2}${userData}`;
+    // TODO: Set cmd2 default to 00 properly
+    this.raw = `02${type}${this.destinationId}${flags}${cmd.cmd1}${cmd.cmd2 ?? '00'}${userData}`;
     this.command = cmd;
     this.command.raw = this.raw;
   }

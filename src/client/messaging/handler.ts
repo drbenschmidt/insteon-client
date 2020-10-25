@@ -1,14 +1,26 @@
 import DeviceCommandRequest from '../../model/api/device-command-request';
-import Logger from '../../utils/logger';
+import Logger, { LogLevel } from '../../utils/logger';
 import { MessageType } from './constants';
 import { Handlers } from './handlers';
 
+export type MessageHandlerProps = {
+  logLevel?: LogLevel;
+}
+
 export default class MessageHandler {
-  private static log = new Logger('Message Handler');
+  private log: Logger;
   private timeout: number = 1000;
   private dispatchers = Handlers;
   public currentRequest: DeviceCommandRequest;
   public buffer: string = '';
+
+  constructor(props: MessageHandlerProps) {
+    const {
+      logLevel,
+    } = props;
+
+    this.log = new Logger('Message Handler', null, logLevel);
+  }
 
   setRequest(req: DeviceCommandRequest) {
     this.currentRequest = req;
@@ -20,22 +32,22 @@ export default class MessageHandler {
 
     switch (result) {
       case MessageType.INSUFFICIENT_DATA:
-        MessageHandler.log.debug(`parsing - insufficient data to continue - ${this.buffer.length}`);
+        this.log.debug(`parsing - insufficient data to continue - ${this.buffer.length}`);
         break;
       case MessageType.PROCESSED:
       case MessageType.SKIPPED:
         // If a message was consumed or skipped
-        MessageHandler.log.debug(`parsing - message ${(result === MessageType.PROCESSED ? 'consumed' : 'skipped')}`);
+        this.log.debug(`parsing - message ${(result === MessageType.PROCESSED ? 'consumed' : 'skipped')}`);
         if (this.buffer?.length > 0) {
           // Run this again, but allow the message loop a chance to wake up.
           setTimeout(() => {
-            MessageHandler.log.debug('parsing - buffer still full, looping');
+            this.log.debug('parsing - buffer still full, looping');
             this.process();
           }, 0);
         }
         break;
       default:
-        MessageHandler.log.debug(`parsing - unknown result ${result}`);
+        this.log.debug(`parsing - unknown result ${result}`);
     }
   }
   
@@ -46,9 +58,9 @@ export default class MessageHandler {
 
     var result; // Just trying to be careful and suss out every single path
     var raw = this.buffer;
-    MessageHandler.log.debug(`decode - buffer: ${raw}`);
+    this.log.debug(`decode - buffer: ${raw}`);
     var status = this.currentRequest;
-    MessageHandler.log.debug(`decode - status: ${status}`);
+    this.log.debug(`decode - status: ${status}`);
 
     // check for gateway NAK
     if (raw.substr(0, 2) === '15' && this.currentRequest /*&& this.timeout*/) {
@@ -77,7 +89,7 @@ export default class MessageHandler {
 
     var nextCmdAt = raw.search(/02(5[0-8]|6[0-9a-f]|7[0-3])/i);
     if (nextCmdAt > 0) {
-      MessageHandler.log.debug('another command found at ' + nextCmdAt);
+      this.log.debug('another command found at ' + nextCmdAt);
       this.buffer = raw = raw.substr(nextCmdAt);
     }
 
@@ -90,14 +102,14 @@ export default class MessageHandler {
       if (rawMsg === false) {
         return MessageType.INSUFFICIENT_DATA;
       }
-      MessageHandler.log.debug(`decode - dispatcher - ${dispatcher.name}`);
+      this.log.debug(`decode - dispatcher - ${dispatcher.name}`);
       result = dispatcher.handle(this, rawMsg as string, status);
       if (result !== MessageType.SKIPPED) {
         this.trailer();
       }
       return result;
     } else {
-      MessageHandler.log.debug(`decode - dispatcher - No dispatcher for ${type.toUpperCase()}`);
+      this.log.debug(`decode - dispatcher - No dispatcher for ${type.toUpperCase()}`);
       if (this.buffer.length > 4) {
         this.buffer = this.buffer.substr(4);
       } else {
@@ -109,8 +121,7 @@ export default class MessageHandler {
 
   trailer = () => {
     const { currentRequest: status } = this;
-    // MessageHandler.log.debug(`status (after parsing): ${JSON.stringify(status)}`);
-    MessageHandler.log.debug(`trailer - exitOnAck: ${status.command.exitOnAck}, success: ${status.success}, ack: ${status.ack}, nack: ${status.nack}`);
+    this.log.debug(`trailer - exitOnAck: ${status.command.exitOnAck}, success: ${status.success}, ack: ${status.ack}, nack: ${status.nack}`);
     if (status) {
       if (status.command.exitOnAck) {
         status.success = status.ack;
@@ -122,7 +133,6 @@ export default class MessageHandler {
         }
         delete this.currentRequest;
         status.callback(status);
-        // sendCommand(this, this.queue.shift());
       }
     }
   }

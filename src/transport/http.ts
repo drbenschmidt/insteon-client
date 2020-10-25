@@ -19,7 +19,7 @@ import Mutex from '../utils/mutex';
  * or we risk running into them being dropped. A message queue is implemented to prevent this.
  */
 export default class Http implements ITransport {
-  private static log: Logger = new Logger('HTTP');
+  private log: Logger;
   private config: ClientConfig;
   private agent: Agent;
   private emitter: EventEmitter;
@@ -34,10 +34,11 @@ export default class Http implements ITransport {
       keepAlive: true,
       keepAliveMsecs: 5000 // Be nice and give the socket back in 5sec.
     });
+    this.log = new Logger('HTTP', null, config.logLevel);
   }
 
   setListen(val: Boolean): void {
-    Http.log.debug(`listening ${val}`);
+    this.log.debug(`listening ${val}`);
     this.listen = val;
   }
 
@@ -53,7 +54,7 @@ export default class Http implements ITransport {
   }
 
   fetchBuf = async () => {
-    Http.log.debug('Fetching buffer');
+    this.log.debug('Fetching buffer');
     const { data } = await this.httpGet({
       path: '/buffstatus.xml'
     });
@@ -65,7 +66,7 @@ export default class Http implements ITransport {
     if (raw.length === 202) {
       // The last 2 bytes are the length of 'good' data
       const length = parseInt(raw.substr(200), 16);
-      Http.log.debug(`Raw response (length ${length})`);
+      this.log.debug(`Raw response (length ${length})`);
       raw = raw.substring(0, length);
     }
     let result = raw;
@@ -74,11 +75,8 @@ export default class Http implements ITransport {
     }
     this.knownBufferPage = raw;
     if (result.length) {
-      Http.log.debug(`good buffer length: ${raw.length}`);
+      this.log.debug(`good buffer length: ${raw.length}`);
       this.emitter.emit('buffer', result);
-      // insteon.buffer += result;
-      // insteon.checkStatus();
-      // currentDelay = 100;
     }
 
     if (raw.length > 30) {
@@ -91,7 +89,7 @@ export default class Http implements ITransport {
   };
 
   private async clearBuffer() {
-    Http.log.debug('clearing buffer');
+    this.log.debug('clearing buffer');
 
     await this.httpGet({
       path: '/1?XB=M=1',
@@ -110,11 +108,11 @@ export default class Http implements ITransport {
         ...requestOptions,
       };
 
-      Http.log.debug(`Connecting to http://${host}:${port}${options.path}`);
+      this.log.debug(`Connecting to http://${host}:${port}${options.path}`);
 
       return new Promise((resolve, reject) => {
         request(options, (res) => {
-          Http.log.debug(`Response Code: ${res.statusCode}, ${res.statusMessage}`);
+          this.log.debug(`Response Code: ${res.statusCode}, ${res.statusMessage}`);
           if (res.statusCode !== 200) {
             reject(res.statusMessage);
             return;
@@ -127,7 +125,6 @@ export default class Http implements ITransport {
           });
 
           res.on('end', () => {
-            // Http.log.debug(`Recieved: ${data}`);
             resolve({
               data,
             });
@@ -139,8 +136,6 @@ export default class Http implements ITransport {
     });
   }
 
-  // TODO: message queueing
-  // TODO: This path might need to be changed.
   async send(message: DeviceCommand): Promise<{ data: string; }> {
     const options = {
       path: '/3?' + message.raw + '=I=3',
@@ -157,6 +152,5 @@ export default class Http implements ITransport {
 
   pipeEvents(emitter: EventEmitter): void {
     this.emitter = emitter;
-    // this.looper.pipeEvents(emitter);
   }
 }

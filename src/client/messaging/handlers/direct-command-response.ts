@@ -28,9 +28,7 @@ export default class Dispatcher extends DispatcherBase {
       return false;
     }
 
-    console.log(`expected length ${expectedLength}, raw length ${raw.length}, updating buffer`);
     handler.buffer = raw.substr(expectedLength);
-    console.log(`new message buffer: "${handler.buffer}"`);
 
     return raw.substr(0, expectedLength);
   }

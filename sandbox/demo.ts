@@ -1,4 +1,5 @@
 import { Client } from '../src'
+import { LogLevel } from '../src/utils/logger';
 
 const sleep = (ms: number) => new Promise(res => setTimeout(res, ms));
 
@@ -8,6 +9,7 @@ const sleep = (ms: number) => new Promise(res => setTimeout(res, ms));
     pass: process.env.INSTEON_PASSWORD,
     host: "192.168.2.24",
     port: 25105,
+    logLevel: LogLevel.Info,
   });
 
   const light = client.getDevice('56.21.93');

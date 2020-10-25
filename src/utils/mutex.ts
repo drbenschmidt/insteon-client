@@ -1,3 +1,5 @@
+// TODO: Document where I got this from, they deserve credit!
+
 export default class Mutex {
   private mutex = Promise.resolve();
 

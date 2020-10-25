@@ -9,7 +9,7 @@ export default class Light extends DeviceBase {
   constructor(id: string, client: Client) {
     super(id, client);
 
-    this.log = new Logger(`Light ${this.id.toRawString()}`, Client.log);
+    this.log = new Logger(`Light ${this.id.toRawString()}`, client.log);
   }
 
   async setLevel(value: number): Promise<void> {

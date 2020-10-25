@@ -1,5 +1,5 @@
 import { ITransport } from '../transport/itransport';
-import Logger from '../utils/logger';
+import Logger, { LogLevel } from '../utils/logger';
 import { EventEmitter } from 'events'
 import { ClientConfig } from '../model/config';
 import MessageHandler from './messaging/handler';
@@ -11,28 +11,39 @@ import Light from '../model/device/light';
 
 const sleep = (ms: number) => new Promise(res => setTimeout(res, ms));
 
+export type ClientProps = {
+  transport: ITransport;
+  logLevel?: LogLevel;
+};
+
 export default class Client extends EventEmitter {
   private transport: ITransport;
-  private messageHandler: MessageHandler = new MessageHandler();
-  static log: Logger = new Logger('Client');
+  private messageHandler: MessageHandler;
   private sendCommandMutex = new Mutex();
+  log: Logger;
 
-  constructor(transport: ITransport) {
+  constructor(props: ClientProps) {
     super();
+
+    const {
+      transport,
+      logLevel,
+    } = props;
+    
+    this.log = new Logger('Client', null, logLevel);
 
     this.transport = transport;
     transport.pipeEvents(this);
-    
+
+    this.messageHandler = new MessageHandler({ logLevel });
     this.on('buffer', this.messageHandler.process);
   }
 
   static async createFor2245(config: ClientConfig) {
-    Client.log.debug('Creating Client w/HTTP transport');
-
     const HttpTransport = (await import('../transport/http')).default;
     const transport = new HttpTransport(config);
 
-    return new Client(transport);
+    return new Client({ transport, logLevel: config.logLevel });
   }
 
   open() {
