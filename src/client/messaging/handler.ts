@@ -21,15 +21,15 @@ export default class MessageHandler {
   constructor(properties: MessageHandlerProperties) {
     const { logLevel } = properties;
 
-    this.log = new Logger("Message Handler", null, logLevel);
+    this.log = new Logger("Message Handler", undefined, logLevel);
   }
 
-  setRequest(request: DeviceCommandRequest) {
+  setRequest(request: DeviceCommandRequest): void {
     this.currentRequest = request;
     this.buffer = "";
   }
 
-  process = (bufferIn?: string) => {
+  process = (bufferIn?: string): void => {
     const result = this.decode(bufferIn);
 
     switch (result) {
@@ -59,7 +59,7 @@ export default class MessageHandler {
     }
   };
 
-  decode = (bufferIn?: string) => {
+  decode = (bufferIn?: string): MessageType => {
     if (bufferIn?.length > 0) {
       this.buffer += bufferIn;
     }
@@ -98,7 +98,8 @@ export default class MessageHandler {
     const nextCmdAt = raw.search(/02(5[0-8]|6[\da-f]|7[0-3])/i);
     if (nextCmdAt > 0) {
       this.log.debug(`another command found at ${nextCmdAt}`);
-      this.buffer = raw = raw.slice(nextCmdAt);
+      raw = raw.slice(nextCmdAt);
+      this.buffer = raw;
     }
 
     const type = raw.slice(0, 4);
@@ -128,7 +129,7 @@ export default class MessageHandler {
     return MessageType.SKIPPED;
   };
 
-  trailer = () => {
+  trailer = (): void => {
     const { currentRequest: status } = this;
     this.log.debug(
       `trailer - exitOnAck: ${status.command.exitOnAck}, success: ${status.success}, ack: ${status.ack}, nack: ${status.nack}`

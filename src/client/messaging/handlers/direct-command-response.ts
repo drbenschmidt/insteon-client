@@ -1,7 +1,13 @@
+/* eslint-disable no-bitwise */
+/* eslint-disable no-param-reassign */
 import type MessageHandler from "../handler";
 import { IDispatcher } from "./idispatcher";
 import DispatcherBase from "./dispatcher-base";
 import { MessageType } from "../constants";
+import DeviceCommandRequest from "../../../model/api/device-command-request";
+
+const { parseInt } = Number;
+const { max } = Math;
 
 export default class Dispatcher extends DispatcherBase {
   id = "0262";
@@ -12,6 +18,7 @@ export default class Dispatcher extends DispatcherBase {
     map.set(this.id, this);
   }
 
+  // eslint-disable-next-line class-methods-use-this
   checkSize(handler: MessageHandler, raw: string): string | boolean {
     // Under 12 characters, we don't have the flags byte, so we need more.
     if (raw.length < 12) {
@@ -21,7 +28,7 @@ export default class Dispatcher extends DispatcherBase {
     // The interesting thing about an 0262 is it's a variable length response.
     // So unlike the other responses, we need to get to the message flags byte to know
     // whether it's a standard (18 hex chars) or extended (46 hex chars) response.
-    const flags = Number.parseInt(raw.slice(10, 12), 16);
+    const flags = parseInt(raw.slice(10, 12), 16);
     const isExtended = (flags & 0x10) !== 0;
     const expectedLength = isExtended ? 46 : 18;
 
@@ -31,10 +38,15 @@ export default class Dispatcher extends DispatcherBase {
 
     handler.buffer = raw.slice(expectedLength);
 
-    return raw.slice(0, Math.max(0, expectedLength));
+    return raw.slice(0, max(0, expectedLength));
   }
 
-  handle(handler: MessageHandler, raw: string, status: any): MessageType {
+  // eslint-disable-next-line class-methods-use-this
+  handle(
+    handler: MessageHandler,
+    raw: string,
+    request: DeviceCommandRequest
+  ): MessageType {
     if (!handler.currentRequest) {
       return MessageType.SKIPPED;
     }
@@ -44,12 +56,12 @@ export default class Dispatcher extends DispatcherBase {
       raw: raw.substr(0, status.command.raw.length + 2)
     }); */
 
-    status.ack =
-      raw.slice(status.command.raw.length, status.command.raw.length + 2) ===
-      "06";
-    status.nack =
-      raw.slice(status.command.raw.length, status.command.raw.length + 2) ===
-      "15";
+    const { raw: requestRaw } = request.command;
+
+    request.ack =
+      raw.slice(requestRaw?.length, requestRaw?.length + 2) === "06";
+    request.nack =
+      raw.slice(requestRaw?.length, requestRaw?.length + 2) === "15";
 
     return MessageType.PROCESSED;
   }

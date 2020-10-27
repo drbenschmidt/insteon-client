@@ -16,4 +16,12 @@ export default class DeviceCommandOptions {
   raw?: string; // TODO: UGLY.
 
   exitOnAck?: boolean = true;
+
+  responseCount?: number;
+
+  isStandardResponse?: boolean;
+
+  waitForExtended?: boolean;
+
+  waitForLinking?: boolean;
 }

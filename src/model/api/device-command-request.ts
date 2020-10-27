@@ -1,11 +1,14 @@
 import { InsteonResponse } from "./response/insteon-response";
 import DeviceCommand from "./device-command";
 import DeviceCommandOptions from "./device-command-options";
+import InsteonId from "./insteon-id";
+
+export type DeviceCommandRequestCallback = (
+  request: DeviceCommandRequest
+) => void;
 
 export default class DeviceCommandRequest {
   success: boolean;
-
-  _command: DeviceCommand;
 
   command: DeviceCommandOptions;
 
@@ -13,12 +16,14 @@ export default class DeviceCommandRequest {
 
   nack: boolean;
 
-  callback: Function;
+  callback: DeviceCommandRequestCallback;
 
   response: InsteonResponse;
 
-  constructor(command: DeviceCommand, callback: Function) {
-    this._command = command;
+  destinationId: InsteonId;
+
+  constructor(command: DeviceCommand, callback: DeviceCommandRequestCallback) {
+    this.destinationId = command.destinationId;
     this.command = command.command;
     this.callback = callback;
   }

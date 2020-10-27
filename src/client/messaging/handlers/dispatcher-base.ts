@@ -1,3 +1,6 @@
+/* eslint-disable no-param-reassign */
+/* eslint-disable class-methods-use-this */
+import DeviceCommandRequest from "../../../model/api/device-command-request";
 import { MessageType } from "../constants";
 import type MessageHandler from "../handler";
 import { IDispatcher } from "./idispatcher";
@@ -18,7 +21,7 @@ export default abstract class DispatcherBase implements IDispatcher {
   abstract handle(
     handler: MessageHandler,
     raw: string,
-    status: any
+    request: DeviceCommandRequest
   ): MessageType;
 
   abstract register(map: Map<string, IDispatcher>): void;

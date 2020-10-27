@@ -1,4 +1,4 @@
-import Client from "../../client";
+import type Client from "../../client";
 import Logger from "../../utils/logger";
 import DeviceCommand from "../api/device-command";
 import LevelResponse from "../api/response/level-response";

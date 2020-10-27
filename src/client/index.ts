@@ -29,7 +29,7 @@ export default class Client extends EventEmitter {
 
     const { transport, logLevel } = properties;
 
-    this.log = new Logger("Client", null, logLevel);
+    this.log = new Logger("Client", undefined, logLevel);
 
     this.transport = transport;
     transport.pipeEvents(this);
@@ -38,14 +38,14 @@ export default class Client extends EventEmitter {
     this.on("buffer", this.messageHandler.process);
   }
 
-  static async createFor2245(config: ClientConfig) {
+  static async createFor2245(config: ClientConfig): Promise<Client> {
     const HttpTransport = (await import("../transport/http")).default;
     const transport = new HttpTransport(config);
 
     return new Client({ transport, logLevel: config.logLevel });
   }
 
-  open() {
+  open(): void {
     this.transport.open();
   }
 
@@ -56,7 +56,7 @@ export default class Client extends EventEmitter {
 
       // TODO: add reject logic for errors.
       return new Promise((resolve, reject) => {
-        const request = new DeviceCommandRequest(
+        const commandRequest = new DeviceCommandRequest(
           command,
           (request: DeviceCommandRequest) => {
             this.transport.setListen(false);
@@ -65,13 +65,13 @@ export default class Client extends EventEmitter {
         );
 
         // Set the request to the message handler so it knows what we're processing.
-        this.messageHandler.setRequest(request);
+        this.messageHandler.setRequest(commandRequest);
 
         // Tell the transport layer that we're expecting more than one response.
         this.transport.setListen(true);
 
         // Send the command!
-        this.transport.send(command);
+        this.transport.send(command).catch(reject);
       });
     });
   }

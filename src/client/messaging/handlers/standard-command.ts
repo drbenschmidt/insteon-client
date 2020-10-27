@@ -1,8 +1,11 @@
+/* eslint-disable class-methods-use-this */
 import type MessageHandler from "../handler";
 import { IDispatcher } from "./idispatcher";
 import DispatcherBase from "./dispatcher-base";
-import { parseMessageReceived } from "../utils";
+import parseMessageReceived from "../utils";
 import { MessageType } from "../constants";
+import DeviceCommandRequest from "../../../model/api/device-command-request";
+import { InsteonMessage } from "../../../model/api/insteon-message";
 
 export default class Dispatcher extends DispatcherBase {
   id = "0250";
@@ -13,15 +16,18 @@ export default class Dispatcher extends DispatcherBase {
     map.set(this.id, this);
   }
 
-  handle(handler: MessageHandler, raw: string, status: any): MessageType {
-    const cmd = {
-      standard: parseMessageReceived(raw),
-    };
+  handle(
+    handler: MessageHandler,
+    raw: string,
+    request: DeviceCommandRequest
+  ): MessageType {
+    const message = parseMessageReceived(raw);
+
     // console.log('recieved command', cmd);
     // this.emit('recvCommand', cmd);
     // debug('Parsed command: %j', cmd);
     // debug('Status: %j', status);
-    const id = cmd.standard.id.toUpperCase();
+    const id = message.id.toString().toUpperCase();
     // debug('Devices: %j', Object.keys(this.devices));
 
     // TODO: Allow device objects to be notified to update based on the response.
@@ -30,7 +36,7 @@ export default class Dispatcher extends DispatcherBase {
       //this.handleCommand(this.devices[id], cmd);
     } */
 
-    const requestId = status?._command?.destinationId?.toString();
+    const requestId = request?.destinationId?.toString();
 
     if (requestId !== id) {
       // command isn't a response for a command we sent
@@ -41,24 +47,27 @@ export default class Dispatcher extends DispatcherBase {
       return MessageType.SKIPPED;
     }
 
-    if (!status.response) {
-      status.response = {};
+    if (!request.response) {
+      request.response = {};
     }
 
-    const { responseCount } = status.command;
+    const { responseCount } = request.command;
 
     if (responseCount) {
-      status.response.standard = status.response.standard || [];
-      status.response.standard.push(cmd.standard);
-      status.success = status.response.standard.length === responseCount;
+      let standard = request?.response.standard as Array<InsteonMessage>;
+      if (!standard) {
+        standard = new Array<InsteonMessage>();
+      }
+      standard.push(message);
+      request.success = standard.length === responseCount;
     } else {
-      status.response.standard = cmd.standard;
-      status.success =
-        cmd.standard !== undefined &&
-        cmd.standard !== null &&
-        (!status.command.extended || !!status.command.isStandardResponse) &&
-        !status.command.waitForExtended &&
-        !status.command.waitForLinking;
+      request.response.standard = message;
+      request.success =
+        message !== undefined &&
+        message !== null &&
+        (!request.command.extended || !!request.command.isStandardResponse) &&
+        !request.command.waitForExtended &&
+        !request.command.waitForLinking;
     }
 
     return MessageType.PROCESSED;

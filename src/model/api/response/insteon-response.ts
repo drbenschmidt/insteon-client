@@ -3,5 +3,6 @@ interface InsteonResponseStandard {
 }
 
 export interface InsteonResponse {
-  standard: InsteonResponseStandard;
+  standard?: InsteonResponseStandard | Array<InsteonResponseStandard>;
+  extended?: unknown;
 }
