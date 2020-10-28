@@ -4,8 +4,10 @@ import { IDispatcher } from "./idispatcher";
 import DispatcherBase from "./dispatcher-base";
 import parseMessageReceived from "../utils";
 import { MessageType } from "../constants";
-import DeviceCommandRequest from "../../../model/api/device-command-request";
-import { InsteonMessage } from "../../../model/api/insteon-message";
+import {
+  InsteonMessage,
+  InsteonRequestWrapper,
+} from "../../../model/api/insteon-message";
 
 export default class Dispatcher extends DispatcherBase {
   id = "0250";
@@ -19,7 +21,7 @@ export default class Dispatcher extends DispatcherBase {
   handle(
     handler: MessageHandler,
     raw: string,
-    request: DeviceCommandRequest
+    request: InsteonRequestWrapper
   ): MessageType {
     const message = parseMessageReceived(raw);
 

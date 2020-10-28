@@ -1,5 +1,6 @@
 import { genCrc, toHex } from "../util";
 import InsteonId from "./insteon-id";
+import { InsteonResponse } from "./response/insteon-response";
 
 const { assign, create } = Object;
 
@@ -31,6 +32,30 @@ export type InsteonRequest = {
   waitForExtended?: boolean;
   waitForLinking?: boolean;
 };
+
+export type DeviceCommandRequestCallback = (response: InsteonResponse) => void;
+
+export class InsteonRequestWrapper {
+  success: boolean;
+
+  request: InsteonRequest;
+
+  ack: boolean;
+
+  nack: boolean;
+
+  callback: DeviceCommandRequestCallback;
+
+  response: InsteonResponse;
+
+  destinationId: InsteonId;
+
+  constructor(request: InsteonRequest, callback: DeviceCommandRequestCallback) {
+    this.destinationId = request.destinationId;
+    this.callback = callback;
+    this.request = request;
+  }
+}
 
 export const buildDeviceCommand = (request: InsteonRequest): InsteonRequest => {
   const type = "62";

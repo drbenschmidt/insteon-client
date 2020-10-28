@@ -1,6 +1,6 @@
 import type MessageHandler from "../handler";
 import { MessageType } from "../constants";
-import DeviceCommandRequest from "../../../model/api/device-command-request";
+import { InsteonRequestWrapper } from "../../../model/api/insteon-message";
 
 export interface IDispatcher {
   id: string;
@@ -10,6 +10,6 @@ export interface IDispatcher {
   handle(
     handler: MessageHandler,
     raw: string,
-    request: DeviceCommandRequest
+    request: InsteonRequestWrapper
   ): MessageType;
 }

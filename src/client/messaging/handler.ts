@@ -1,4 +1,4 @@
-import DeviceCommandRequest from "../../model/api/device-command-request";
+import { InsteonRequestWrapper } from "../../model/api/insteon-message";
 import Logger, { LogLevel } from "../../utils/logger";
 import { MessageType } from "./constants";
 import Handlers from "./handlers";
@@ -14,7 +14,7 @@ export default class MessageHandler {
 
   private dispatchers = Handlers;
 
-  public currentRequest: DeviceCommandRequest;
+  public currentRequest: InsteonRequestWrapper;
 
   public buffer = "";
 
@@ -24,7 +24,7 @@ export default class MessageHandler {
     this.log = new Logger("Message Handler", undefined, logLevel);
   }
 
-  setRequest(request: DeviceCommandRequest): void {
+  setRequest(request: InsteonRequestWrapper): void {
     this.currentRequest = request;
     this.buffer = "";
   }
@@ -149,7 +149,7 @@ export default class MessageHandler {
           delete this.timeout;
         }
         delete this.currentRequest;
-        currentRequest.callback(currentRequest);
+        currentRequest.callback(currentRequest.response);
       }
     }
   };

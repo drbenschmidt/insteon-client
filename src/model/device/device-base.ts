@@ -1,7 +1,7 @@
 import type Client from "../../client";
 import Logger from "../../utils/logger";
-import DeviceCommand from "../api/device-command";
 import InsteonId from "../api/insteon-id";
+import { buildDeviceCommand } from "../api/insteon-message";
 import { IDevice } from "./idevice";
 
 export default abstract class DeviceBase implements IDevice {
@@ -22,10 +22,12 @@ export default abstract class DeviceBase implements IDevice {
 
   async beep(): Promise<void> {
     this.log.debug("Attempting Beep");
-    const command = new DeviceCommand(this.id, {
-      cmd1: "30",
+
+    const request = buildDeviceCommand({
+      destinationId: this.id,
+      command1: "30",
     });
 
-    await this.client.sendCommand(command);
+    await this.client.sendCommand(request);
   }
 }

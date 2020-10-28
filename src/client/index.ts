@@ -4,11 +4,11 @@ import Logger, { LogLevel } from "../utils/logger";
 import { ClientConfig } from "../model/config";
 import MessageHandler from "./messaging/handler";
 import Mutex from "../utils/mutex";
-import DeviceCommand from "../model/api/device-command";
-import DeviceCommandRequest from "../model/api/device-command-request";
+import { InsteonRequestWrapper } from "../model/api/insteon-message";
 import { InsteonResponse } from "../model/api/response/insteon-response";
 import Light from "../model/device/light";
 import sleep from "../utils/sleep";
+import { InsteonRequest } from "../model/api/insteon-message";
 
 export type ClientProperties = {
   transport: ITransport;
@@ -49,29 +49,28 @@ export default class Client extends EventEmitter {
     this.transport.open();
   }
 
-  async sendCommand(command: DeviceCommand): Promise<InsteonResponse> {
+  async sendCommand(request: InsteonRequest): Promise<InsteonResponse> {
     return this.sendCommandMutex.dispatch(async () => {
       // This helps prevent weird issues with getting messages after sending them.
       await sleep(100);
 
-      // TODO: add reject logic for errors.
       return new Promise((resolve, reject) => {
-        const commandRequest = new DeviceCommandRequest(
-          command,
-          (request: DeviceCommandRequest) => {
+        const requestWrapper = new InsteonRequestWrapper(
+          request,
+          (response: InsteonResponse) => {
             this.transport.setListen(false);
-            resolve(request.response);
+            resolve(response);
           }
         );
 
         // Set the request to the message handler so it knows what we're processing.
-        this.messageHandler.setRequest(commandRequest);
+        this.messageHandler.setRequest(requestWrapper);
 
         // Tell the transport layer that we're expecting more than one response.
         this.transport.setListen(true);
 
         // Send the command!
-        this.transport.send(command).catch(reject);
+        this.transport.send(request).catch(reject);
       });
     });
   }

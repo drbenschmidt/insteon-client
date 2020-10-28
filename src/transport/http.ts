@@ -1,10 +1,10 @@
 import { Agent, request } from "http";
 import { EventEmitter } from "events";
-import DeviceCommand from "../model/api/device-command";
 import { ITransport } from "./itransport";
 import Logger from "../utils/logger";
 import { ClientConfig } from "../model/config";
 import Mutex from "../utils/mutex";
+import { InsteonRequest } from "../model/api/insteon-message";
 
 /**
  * The Http Transport allows communication with 2245 Hubs.
@@ -121,36 +121,36 @@ export default class Http implements ITransport {
       this.log.debug(`GET request to http://${host}:${port}${options.path}`);
 
       return new Promise((resolve, reject) => {
-        request(options, (res) => {
+        request(options, (response) => {
           this.log.debug(
-            `Response Code: ${res.statusCode}, ${res.statusMessage}`
+            `Response Code: ${response.statusCode}, ${response.statusMessage}`
           );
-          if (res.statusCode !== 200) {
-            reject(res.statusMessage);
+          if (response.statusCode !== 200) {
+            reject(response.statusMessage);
             return;
           }
 
           let data = "";
 
-          res.on("data", (chunk) => {
+          response.on("data", (chunk) => {
             data += chunk;
           });
 
-          res.on("end", () => {
+          response.on("end", () => {
             resolve({
               data,
             });
           });
 
-          res.on("error", reject);
+          response.on("error", reject);
         }).end();
       });
     });
   }
 
-  async send(message: DeviceCommand): Promise<{ data: string }> {
+  async send(message: InsteonRequest): Promise<{ data: string }> {
     const options = {
-      path: `/3?${message.command.raw}=I=3`,
+      path: `/3?${message.raw}=I=3`,
     };
 
     const result = await this.httpGet(options);

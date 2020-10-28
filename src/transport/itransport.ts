@@ -1,10 +1,10 @@
 import { EventEmitter } from "events";
-import DeviceCommand from "../model/api/device-command";
+import { InsteonRequest } from "../model/api/insteon-message";
 
 export interface ITransport {
   pipeEvents(emitter: EventEmitter): void;
   open(): void;
   close(): void;
-  send(message: DeviceCommand): Promise<{ data: string }>;
+  send(message: InsteonRequest): Promise<{ data: string }>;
   setListen(value: boolean): void;
 }

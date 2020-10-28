@@ -4,7 +4,7 @@ import type MessageHandler from "../handler";
 import { IDispatcher } from "./idispatcher";
 import DispatcherBase from "./dispatcher-base";
 import { MessageType } from "../constants";
-import DeviceCommandRequest from "../../../model/api/device-command-request";
+import { InsteonRequestWrapper } from "../../../model/api/insteon-message";
 
 const { parseInt } = Number;
 const { max } = Math;
@@ -45,7 +45,7 @@ export default class Dispatcher extends DispatcherBase {
   handle(
     handler: MessageHandler,
     raw: string,
-    request: DeviceCommandRequest
+    request: InsteonRequestWrapper
   ): MessageType {
     if (!handler.currentRequest) {
       return MessageType.SKIPPED;

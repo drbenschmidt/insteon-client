@@ -1,6 +1,6 @@
 /* eslint-disable no-param-reassign */
 /* eslint-disable class-methods-use-this */
-import DeviceCommandRequest from "../../../model/api/device-command-request";
+import { InsteonRequestWrapper } from "../../../model/api/insteon-message";
 import { MessageType } from "../constants";
 import type MessageHandler from "../handler";
 import { IDispatcher } from "./idispatcher";
@@ -21,7 +21,7 @@ export default abstract class DispatcherBase implements IDispatcher {
   abstract handle(
     handler: MessageHandler,
     raw: string,
-    request: DeviceCommandRequest
+    request: InsteonRequestWrapper
   ): MessageType;
 
   abstract register(map: Map<string, IDispatcher>): void;
