@@ -1,6 +1,7 @@
 import type Client from "../../client";
 import Logger from "../../utils/logger";
 import DeviceCommand from "../api/device-command";
+import { buildDeviceCommand } from "../api/insteon-message";
 import LevelResponse from "../api/response/level-response";
 import { formatLevel } from "../util";
 import DeviceBase from "./device-base";
@@ -18,6 +19,12 @@ export default class Light extends DeviceBase {
     const command = new DeviceCommand(this.id, {
       cmd1: "21",
       cmd2: formatLevel(value),
+    });
+
+    const request = buildDeviceCommand({
+      destinationId: this.id,
+      command1: "21",
+      command2: formatLevel(value),
     });
 
     await this.client.sendCommand(command);

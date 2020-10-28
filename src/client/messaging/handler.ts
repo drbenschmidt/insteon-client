@@ -130,21 +130,26 @@ export default class MessageHandler {
   };
 
   trailer = (): void => {
-    const { currentRequest: status } = this;
+    const { currentRequest } = this;
     this.log.debug(
-      `trailer - exitOnAck: ${status.command.exitOnAck}, success: ${status.success}, ack: ${status.ack}, nack: ${status.nack}`
+      `trailer - exitOnAck: ${currentRequest.request.exitOnAck}, success: ${currentRequest.success}, ack: ${currentRequest.ack}, nack: ${currentRequest.nack}`
     );
-    if (status) {
-      if (status.command.exitOnAck) {
-        status.success = status.ack;
+
+    if (currentRequest) {
+      if (currentRequest.request.exitOnAck) {
+        currentRequest.success = currentRequest.ack;
       }
-      if (status.nack || (status.success && status.ack)) {
+
+      if (
+        currentRequest.nack ||
+        (currentRequest.success && currentRequest.ack)
+      ) {
         if (this.timeout) {
           clearTimeout(this.timeout);
           delete this.timeout;
         }
         delete this.currentRequest;
-        status.callback(status);
+        currentRequest.callback(currentRequest);
       }
     }
   };

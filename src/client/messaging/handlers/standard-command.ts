@@ -51,7 +51,7 @@ export default class Dispatcher extends DispatcherBase {
       request.response = {};
     }
 
-    const { responseCount } = request.command;
+    const { responseCount } = request.request;
 
     if (responseCount) {
       let standard = request?.response.standard as Array<InsteonMessage>;
@@ -65,9 +65,9 @@ export default class Dispatcher extends DispatcherBase {
       request.success =
         message !== undefined &&
         message !== null &&
-        (!request.command.extended || !!request.command.isStandardResponse) &&
-        !request.command.waitForExtended &&
-        !request.command.waitForLinking;
+        (!request.request.extended || !!request.request.isStandardResponse) &&
+        !request.request.waitForExtended &&
+        !request.request.waitForLinking;
     }
 
     return MessageType.PROCESSED;

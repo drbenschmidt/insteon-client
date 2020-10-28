@@ -3,8 +3,6 @@ import DeviceCommandOptions from "./device-command-options";
 import InsteonId from "./insteon-id";
 
 export default class DeviceCommand {
-  raw: string;
-
   destinationId: InsteonId;
 
   command: DeviceCommandOptions;
@@ -30,7 +28,7 @@ export default class DeviceCommand {
           userData.slice(0, Math.max(0, pad.length - 4)) + genCrc(fullCmd);
       } else {
         let checksum = 0;
-        fullCmd.match(/.{1,2}/g).forEach(function (b) {
+        fullCmd.match(/.{1,2}/g).forEach((b) => {
           checksum += Number.parseInt(b, 16);
         });
 
@@ -42,10 +40,10 @@ export default class DeviceCommand {
     }
 
     // TODO: Set cmd2 default to 00 properly
-    this.raw = `02${type}${this.destinationId}${flags}${cmd.cmd1}${
+    const raw = `02${type}${this.destinationId}${flags}${cmd.cmd1}${
       cmd.cmd2 ?? "00"
     }${userData}`;
     this.command = cmd;
-    this.command.raw = this.raw;
+    this.command.raw = raw;
   }
 }

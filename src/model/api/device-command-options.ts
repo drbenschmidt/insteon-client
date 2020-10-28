@@ -13,7 +13,7 @@ export default class DeviceCommandOptions {
 
   checksum?: number;
 
-  raw?: string; // TODO: UGLY.
+  raw?: string;
 
   exitOnAck?: boolean = true;
 

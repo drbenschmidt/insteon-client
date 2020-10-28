@@ -56,7 +56,7 @@ export default class Dispatcher extends DispatcherBase {
       raw: raw.substr(0, status.command.raw.length + 2)
     }); */
 
-    const { raw: requestRaw } = request.command;
+    const { raw: requestRaw } = request.request;
 
     request.ack =
       raw.slice(requestRaw?.length, requestRaw?.length + 2) === "06";

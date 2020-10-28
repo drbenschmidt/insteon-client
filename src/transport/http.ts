@@ -150,7 +150,7 @@ export default class Http implements ITransport {
 
   async send(message: DeviceCommand): Promise<{ data: string }> {
     const options = {
-      path: `/3?${message.raw}=I=3`,
+      path: `/3?${message.command.raw}=I=3`,
     };
 
     const result = await this.httpGet(options);
