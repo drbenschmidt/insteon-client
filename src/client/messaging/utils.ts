@@ -6,6 +6,18 @@ import { InsteonMessage } from "../../model/api/insteon-message";
 
 const { parseInt } = Number;
 
+// ex: "025156219352C4EC112E000101000020201FFE1F0000000000"
+//
+// 02 - idk
+// 51 - type
+// 562193 - device id
+// 52C4EC - gateway id
+// 1 - type flag
+// 1 - hops flag
+// 2E - command1
+// 00 - command2
+// 0101000020201FFE1F0000000000
+
 export default function parseMessageReceived(_raw: string): InsteonMessage {
   let raw = _raw;
   const type = raw.slice(2, 4);
@@ -24,12 +36,15 @@ export default function parseMessageReceived(_raw: string): InsteonMessage {
   const maxHops = hopFlag & 3; // bit mask 0011
   const command1 = raw.slice(18, 20);
   const command2 = raw.slice(20, 22);
+  const userData: Array<string> = [];
 
   if (extended) {
-    const userData = [];
-
+    // console.log('userDataRaw', raw.slice(22));
     for (let index = 0; index < 14; index++) {
-      userData.push(raw.slice(22 + index * 2, 2));
+      const start = 22 + index * 2;
+      const data = raw.slice(start, start + 2);
+      // console.log('userDataRaw - data', data);
+      userData.push(data);
     }
     raw = raw.slice(0, Math.max(0, 25 * 2));
   } else {
@@ -47,5 +62,6 @@ export default function parseMessageReceived(_raw: string): InsteonMessage {
     maxHops,
     command1,
     command2,
+    userData,
   } as InsteonMessage;
 }

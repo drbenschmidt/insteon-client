@@ -5,6 +5,5 @@ export interface IDevice {
   id: InsteonId;
   client: Client;
 
-  getInfo(): Promise<void>;
   beep(): Promise<void>;
 }

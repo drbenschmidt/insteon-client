@@ -16,10 +16,6 @@ export default abstract class DeviceBase implements IDevice {
     this.client = client;
   }
 
-  getInfo(): Promise<void> {
-    throw new Error("Method not implemented.");
-  }
-
   async beep(): Promise<void> {
     this.log.debug("Attempting Beep");
 

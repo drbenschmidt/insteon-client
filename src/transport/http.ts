@@ -89,7 +89,7 @@ export default class Http implements ITransport {
       this.emitter.emit("buffer", result);
     }
 
-    if (raw.length > 30) {
+    if (raw.length > 30 && false) {
       await this.clearBuffer();
     }
 

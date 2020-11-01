@@ -4,11 +4,13 @@ import Logger, { LogLevel } from "../utils/logger";
 import { ClientConfig } from "../model/config";
 import MessageHandler from "./messaging/handler";
 import Mutex from "../utils/mutex";
-import { InsteonRequestWrapper } from "../model/api/insteon-message";
+import {
+  InsteonRequestWrapper,
+  InsteonRequest,
+} from "../model/api/insteon-message";
 import { InsteonResponse } from "../model/api/response/insteon-response";
 import Light from "../model/device/light";
 import sleep from "../utils/sleep";
-import { InsteonRequest } from "../model/api/insteon-message";
 
 export type ClientProperties = {
   transport: ITransport;

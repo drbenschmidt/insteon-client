@@ -14,6 +14,8 @@ export type InsteonMessage = {
   maxHops: number;
   command1: string;
   command2: string;
+  userData: Array<string>;
+  crc: boolean;
 };
 
 export type InsteonRequest = {

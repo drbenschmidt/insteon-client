@@ -10,12 +10,14 @@ export default abstract class DispatcherBase implements IDispatcher {
 
   abstract name: string;
 
+  size = 22;
+
   checkSize(handler: MessageHandler, raw: string): string | boolean {
-    if (raw.length < 22) {
+    if (raw.length < this.size) {
       return false;
     }
-    handler.buffer = raw.slice(22);
-    return raw.slice(0, 22);
+    handler.buffer = raw.slice(this.size);
+    return raw.slice(0, this.size);
   }
 
   abstract handle(

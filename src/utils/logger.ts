@@ -16,7 +16,7 @@ export default class Logger {
     this.prefix = prefix;
     this.parent = parent;
 
-    if (level === null && parent !== null) {
+    if (level === undefined && parent !== undefined) {
       this.level = parent.level;
     } else {
       this.level = level ?? LogLevel.Info;

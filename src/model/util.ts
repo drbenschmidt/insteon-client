@@ -1,14 +1,20 @@
-export const scaleUp = (max: number, percentage: number) =>
-  Math.trunc((max * percentage) / 100);
+const { parseInt } = Number;
+const { ceil, trunc } = Math;
 
-export const clamp = (min: number, max: number, value: number) =>
+export const scaleUp = (max: number, percentage: number): number =>
+  trunc((max * percentage) / 100);
+
+export const clamp = (min: number, max: number, value: number): number =>
   Math.min(Math.max(value, min), max);
 
-export const toHex = (value: number, length = 1) =>
+export const toHex = (value: number, length = 1): string =>
   value.toString(16).toUpperCase().padStart(length, "0");
 
-export const formatLevel = (level: number) =>
+export const formatLevel = (level: number): string =>
   toHex(scaleUp(255, clamp(0, 100, level)), 2);
+
+export const byteToLevel = (byte: string): number =>
+  ceil((parseInt(byte, 16) * 100) / 255);
 
 export function genCrc(cmd: string) {
   let crc = 0;
@@ -29,3 +35,67 @@ export function genCrc(cmd: string) {
     });
   return toHex(crc, 2);
 }
+
+const RAMP_RATES = [
+  2000, // shouldn't be used
+  480000,
+  420000,
+  360000,
+  300000,
+  270000,
+  240000,
+  210000,
+  180000,
+  150000,
+  120000,
+  90000,
+  60000,
+  47000,
+  43000,
+  38500,
+  34000,
+  32000,
+  30000,
+  28000,
+  26000,
+  23500,
+  21500,
+  19000,
+  8500,
+  6500,
+  4500,
+  2000,
+  500,
+  300,
+  200,
+  100,
+];
+
+export function lookupRampRateIndex(rate: number): number {
+  for (let i = 1; i < RAMP_RATES.length; i++) {
+    if (rate >= RAMP_RATES[i]) {
+      return i;
+    }
+  }
+
+  return RAMP_RATES.length - 1;
+}
+
+export function byteToRampRate(byte: string): number {
+  return RAMP_RATES[parseInt(byte, 16)];
+}
+
+export const rampRateToHexHalfByte = (rate: number): string =>
+  trunc(lookupRampRateIndex(rate) / 2)
+    .toString(16)
+    .toUpperCase();
+
+export const levelToHexHalfByte = (level: number): string => {
+  // scale level to a max of 0xF (15)
+  const mathed = trunc((15 * clamp(0, 100, level)) / 100);
+
+  return mathed.toString(16).toUpperCase();
+};
+
+export const levelToHexByte = (level: number): string =>
+  toHex(trunc((255 * clamp(0, 100, level)) / 100));
