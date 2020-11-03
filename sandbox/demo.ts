@@ -48,12 +48,12 @@ const dim = async (light: Light) => {
 
   // 025056219352C4EC202EFC
   // 025056219352C4EC201100
-  light.turnOn("test");
+  // light.turnOff("fast");
 
   // await getLevel(light);
 
   // await dim(light);
-  // await getInfo(light);
+  await getInfo(light);
 
   // parseTest();
 

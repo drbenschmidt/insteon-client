@@ -72,9 +72,10 @@ const RAMP_RATES = [
 ];
 
 export function lookupRampRateIndex(rate: number): number {
-  for (let i = 1; i < RAMP_RATES.length; i++) {
-    if (rate >= RAMP_RATES[i]) {
-      return i;
+  // eslint-disable-next-line no-plusplus
+  for (let index = 1; index < RAMP_RATES.length; index++) {
+    if (rate >= RAMP_RATES[index]) {
+      return index;
     }
   }
 

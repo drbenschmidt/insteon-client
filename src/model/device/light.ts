@@ -9,7 +9,6 @@ import {
   toHex,
   rampRateToHexHalfByte,
   levelToHexHalfByte,
-  levelToHexByte,
 } from "../util";
 import DeviceBase from "./device-base";
 
@@ -89,7 +88,6 @@ export default class Light extends DeviceBase {
     const result = await this.client.sendCommand(request);
 
     this.log.debug("getInfo - result", result);
-    console.log("getInfo - console", result);
 
     const rampRate = byteToRampRate(result.extended.userData[6] as string);
     const onLevel = byteToLevel(result.extended.userData[7] as string);
@@ -102,6 +100,9 @@ export default class Light extends DeviceBase {
     };
   }
 
+  /**
+   * @deprecated Because I can't get it to work.
+   */
   async turnOn(rate = "fast", level = 100): Promise<void> {
     let rampRate = 100;
 
@@ -126,12 +127,14 @@ export default class Light extends DeviceBase {
       destinationId: this.id,
       command1: "2E",
       command2: rampAndLevel,
-      // command2: levelToHexByte(level),
     });
 
     await this.client.sendCommand(request);
   }
 
+  /**
+   * @deprecated Because I can't get it to work.
+   */
   async turnOff(rate = "fast"): Promise<void> {
     let rampRate = 100;
 
