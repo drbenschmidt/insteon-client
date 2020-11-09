@@ -1,5 +1,6 @@
 import type Client from "../../client";
 import Logger from "../../utils/logger";
+import { InsteonCommand } from "../api/insteon-command";
 import { buildDeviceCommand } from "../api/insteon-message";
 import LevelResponse from "../api/response/level-response";
 import {
@@ -9,6 +10,7 @@ import {
   toHex,
   rampRateToHexHalfByte,
   levelToHexHalfByte,
+  levelToHexByte,
 } from "../util";
 import DeviceBase from "./device-base";
 
@@ -31,7 +33,7 @@ export default class Light extends DeviceBase {
 
     const request = buildDeviceCommand({
       destinationId: this.id,
-      command1: "21",
+      command1: toHex(InsteonCommand.LightInstantChange),
       command2: formatLevel(value),
     });
 
@@ -43,7 +45,7 @@ export default class Light extends DeviceBase {
 
     const request = buildDeviceCommand({
       destinationId: this.id,
-      command1: "19",
+      command1: toHex(InsteonCommand.StatusRequest),
       exitOnAck: false, // There's another response we want.
     });
 
@@ -57,7 +59,7 @@ export default class Light extends DeviceBase {
 
     const request = buildDeviceCommand({
       destinationId: this.id,
-      command1: "15",
+      command1: toHex(InsteonCommand.Brighten),
     });
 
     await this.client.sendCommand(request);
@@ -68,7 +70,7 @@ export default class Light extends DeviceBase {
 
     const request = buildDeviceCommand({
       destinationId: this.id,
-      command1: "16",
+      command1: toHex(InsteonCommand.Dim),
     });
 
     await this.client.sendCommand(request);
@@ -79,7 +81,7 @@ export default class Light extends DeviceBase {
 
     const request = buildDeviceCommand({
       destinationId: this.id,
-      command1: "2E",
+      command1: toHex(InsteonCommand.ExtendedGetSet),
       command2: "00",
       extended: true,
       userData: [toHex(1)],
@@ -100,10 +102,8 @@ export default class Light extends DeviceBase {
     };
   }
 
-  /**
-   * @deprecated Because I can't get it to work.
-   */
-  async turnOn(rate = "fast", level = 100): Promise<void> {
+  async rampOn(rate = "fast", level = 100): Promise<void> {
+    this.log.debug(`rampOn(${rate}, ${level})`);
     let rampRate = 100;
 
     // eslint-disable-next-line default-case
@@ -125,17 +125,15 @@ export default class Light extends DeviceBase {
 
     const request = buildDeviceCommand({
       destinationId: this.id,
-      command1: "2E",
+      command1: toHex(InsteonCommand.LightOnRamp),
       command2: rampAndLevel,
     });
 
     await this.client.sendCommand(request);
   }
 
-  /**
-   * @deprecated Because I can't get it to work.
-   */
-  async turnOff(rate = "fast"): Promise<void> {
+  async rampOff(rate = "fast"): Promise<void> {
+    this.log.debug(`rampOn(${rate})`);
     let rampRate = 100;
 
     // eslint-disable-next-line default-case
@@ -155,26 +153,49 @@ export default class Light extends DeviceBase {
 
     const request = buildDeviceCommand({
       destinationId: this.id,
-      command1: "2F",
+      command1: toHex(InsteonCommand.LightOffRamp),
       command2: rampAndLevel,
     });
 
     await this.client.sendCommand(request);
   }
 
-  async turnOffFast(): Promise<void> {
+  async turnOn(level = 100): Promise<void> {
+    this.log.debug(`turnOn(${level})`);
     const request = buildDeviceCommand({
       destinationId: this.id,
-      command1: "14",
+      command1: toHex(InsteonCommand.On),
+      command2: levelToHexByte(level),
     });
 
     await this.client.sendCommand(request);
   }
 
   async turnOnFast(): Promise<void> {
+    this.log.debug(`turnOffFast()`);
     const request = buildDeviceCommand({
       destinationId: this.id,
-      command1: "12",
+      command1: toHex(InsteonCommand.OnFast),
+    });
+
+    await this.client.sendCommand(request);
+  }
+
+  async turnOff(): Promise<void> {
+    this.log.debug(`turnOn()`);
+    const request = buildDeviceCommand({
+      destinationId: this.id,
+      command1: toHex(InsteonCommand.Off),
+    });
+
+    await this.client.sendCommand(request);
+  }
+
+  async turnOffFast(): Promise<void> {
+    this.log.debug(`turnOffFast()`);
+    const request = buildDeviceCommand({
+      destinationId: this.id,
+      command1: toHex(InsteonCommand.OffFast),
     });
 
     await this.client.sendCommand(request);

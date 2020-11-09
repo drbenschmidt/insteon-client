@@ -1,17 +1,7 @@
 import { Client } from "../src";
-import parseMessageReceived from "../src/client/messaging/utils";
 import type Light from "../src/model/device/light";
 import { LogLevel } from "../src/utils/logger";
 import sleep from "../src/utils/sleep";
-
-const parseTest = () => {
-  const extended = "025156219352C4EC112E000101000020201FFE1F0000000000";
-  const standard = "025056219352C4EC202F0C";
-
-  const result = parseMessageReceived(standard);
-
-  console.log(result);
-};
 
 const getLevel = async (light: Light) => {
   const { level } = await light.getLevel();
@@ -48,7 +38,7 @@ const dim = async (light: Light) => {
 
   // 025056219352C4EC202EFC
   // 025056219352C4EC201100
-  // light.turnOff("fast");
+  await light.turnOff();
 
   // await getLevel(light);
 
