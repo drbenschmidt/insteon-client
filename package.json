@@ -1,0 +1,40 @@
+{
+  "name": "insteon-client",
+  "version": "0.0.1",
+  "description": "interface with insteon hub over http",
+  "main": "src/index.ts",
+  "scripts": {
+    "test": "jest",
+    "start:demo": "ts-node-dev sandbox/demo.ts",
+    "lint": "eslint ./ --ext .js,.ts --cache"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/drbenschmidt/insteon-client.git"
+  },
+  "keywords": [
+    "insteon",
+    "client"
+  ],
+  "author": "Ben Schmidt",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/drbenschmidt/insteon-client/issues"
+  },
+  "homepage": "https://github.com/drbenschmidt/insteon-client#readme",
+  "devDependencies": {
+    "@types/node": "^14.11.10",
+    "@typescript-eslint/eslint-plugin": "^4.5.0",
+    "@typescript-eslint/parser": "^4.5.0",
+    "eslint": "^7.12.0",
+    "eslint-config-airbnb-typescript": "^12.0.0",
+    "eslint-config-prettier": "^6.14.0",
+    "eslint-plugin-import": "^2.22.1",
+    "eslint-plugin-prettier": "^3.1.4",
+    "eslint-plugin-unicorn": "^23.0.0",
+    "prettier": "^2.1.2",
+    "ts-node": "^9.0.0",
+    "ts-node-dev": "^1.0.0",
+    "typescript": "^4.0.3"
+  }
+}
