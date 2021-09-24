@@ -2,13 +2,11 @@
   "plugins": [
     "@typescript-eslint",
     "prettier",
-    "unicorn" ,
     "import"
   ],
   "extends": [
     "airbnb-typescript/base",
     "plugin:@typescript-eslint/recommended",
-    "plugin:unicorn/recommended",
     "plugin:prettier/recommended",
     "prettier",
     "prettier/@typescript-eslint"
@@ -24,6 +22,7 @@
     "node": true
   },
   "rules": {
+    "class-methods-use-this": "off",
     "no-debugger": "off",
     "no-console": 0,
     "unicorn/number-literal-case": "off"

@@ -10,6 +10,8 @@ export const clamp = (min: number, max: number, value: number): number =>
 export const toHex = (value: number, length = 1): string =>
   value.toString(16).toUpperCase().padStart(length, "0");
 
+export const fromHex = (value: string): number => parseInt(value, 16);
+
 export const formatLevel = (level: number): string =>
   toHex(scaleUp(255, clamp(0, 100, level)), 2);
 
@@ -29,7 +31,7 @@ export function genCrc(cmd: string) {
         fb = crc & 0x4000 ? fb ^ 1 : fb;
         fb = crc & 0x1000 ? fb ^ 1 : fb;
         fb = crc & 0x0008 ? fb ^ 1 : fb;
-        crc = ((crc << 1) & 0xFFFF) | fb;
+        crc = ((crc << 1) & 0xffff) | fb;
         byte >>= 1;
       }
     });
@@ -100,3 +102,15 @@ export const levelToHexHalfByte = (level: number): string => {
 
 export const levelToHexByte = (level: number): string =>
   toHex(trunc((255 * clamp(0, 100, level)) / 100));
+
+export const sum = (numbers: number[]): number =>
+  numbers.reduce((prev, curr) => prev + curr, 0);
+
+export const toByteArray = (raw: string): number[] =>
+  raw
+    .split("")
+    .map((_, index, array) =>
+      !(index % 2) ? `${array[index]}${array[index + 1]}` : undefined
+    )
+    .filter((a) => a)
+    .map((value) => fromHex(value));

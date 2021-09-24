@@ -29,18 +29,24 @@ const dim = async (light: Light) => {
   const client = await Client.createFor2245({
     user: process.env.INSTEON_USERNAME,
     pass: process.env.INSTEON_PASSWORD,
-    host: "192.168.2.24",
+    host: "192.168.1.48",
     port: 25105,
     logLevel: LogLevel.Debug,
   });
 
-  const light = client.getDevice("56.21.93");
+  await client.open();
+
+  // Just keep running, let the console logging show packets.
+  await sleep(60 * 60 * 1000);
+
+  // const light = client.getDevice("56.21.93");
+  const light = client.getDevice("56.32.CA");
 
   // 025056219352C4EC202EFC
   // 025056219352C4EC201100
-  await light.turnOff();
+  // await light.turnOffFast();
 
-  // await getLevel(light);
+  await getLevel(light);
 
   // await dim(light);
   await getInfo(light);

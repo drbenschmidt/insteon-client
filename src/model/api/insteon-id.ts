@@ -1,3 +1,5 @@
+import { toHex } from "../util";
+
 export const INSTEON_ID_REGEX = /^[\dA-Fa-f]{6}$/;
 
 export default class InsteonId {
@@ -14,11 +16,17 @@ export default class InsteonId {
     this.raw = id;
   }
 
-  toString() {
+  static fromBytes(a: number, b: number, c: number): InsteonId {
+    const str = `${toHex(a, 2)}${toHex(b, 2)}${toHex(c, 2)}`;
+
+    return new InsteonId(str);
+  }
+
+  toString(): string {
     return this.value;
   }
 
-  toRawString() {
+  toRawString(): string {
     return this.raw;
   }
 }

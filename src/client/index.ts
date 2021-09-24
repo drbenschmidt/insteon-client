@@ -3,6 +3,7 @@ import { ITransport } from "../transport/itransport";
 import Logger, { LogLevel } from "../utils/logger";
 import { ClientConfig } from "../model/config";
 import MessageHandler from "./messaging/handler";
+import MessageHandler2 from "./messaging/handler2";
 import Mutex from "../utils/mutex";
 import {
   InsteonRequestWrapper,
@@ -20,7 +21,7 @@ export type ClientProperties = {
 export default class Client extends EventEmitter {
   private transport: ITransport;
 
-  private messageHandler: MessageHandler;
+  private messageHandler: MessageHandler2;
 
   private sendCommandMutex = new Mutex();
 
@@ -36,7 +37,7 @@ export default class Client extends EventEmitter {
     this.transport = transport;
     transport.pipeEvents(this);
 
-    this.messageHandler = new MessageHandler({ logLevel });
+    this.messageHandler = new MessageHandler2();
     this.on("buffer", this.messageHandler.process);
   }
 
@@ -47,8 +48,8 @@ export default class Client extends EventEmitter {
     return new Client({ transport, logLevel: config.logLevel });
   }
 
-  open(): void {
-    this.transport.open();
+  async open(): Promise<void> {
+    await this.transport.open();
   }
 
   async sendCommand(request: InsteonRequest): Promise<InsteonResponse> {
@@ -66,7 +67,7 @@ export default class Client extends EventEmitter {
         );
 
         // Set the request to the message handler so it knows what we're processing.
-        this.messageHandler.setRequest(requestWrapper);
+        // this.messageHandler.setRequest(requestWrapper);
 
         // Tell the transport layer that we're expecting more than one response.
         this.transport.setListen(true);

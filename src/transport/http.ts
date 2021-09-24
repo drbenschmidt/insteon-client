@@ -5,15 +5,21 @@ import Logger from "../utils/logger";
 import { ClientConfig } from "../model/config";
 import Mutex from "../utils/mutex";
 import { InsteonRequest } from "../model/api/insteon-message";
+import { Stack } from "../utils/stack";
+import AsyncLoop from "../utils/async-loop";
+
+const { parseInt } = Number;
+
+const ZERO_FILLED_TEXT = "".padEnd(200, "0");
 
 /**
  * The Http Transport allows communication with 2245 Hubs.
  * The gist of it is, commands are sent to a known endpoint which responds with
- * whether or not the command was successfully recieved and interpreted. The
+ * whether or not the command was successfully received and interpreted. The
  * response contains no information about the result of the command.
  *
- * There is an event buffer that can be read, and uppon reading, it will
- * not clear it - that must be done seperately.
+ * There is an event buffer that can be read, and upon reading, it will
+ * not clear it - that must be done separately.
  *
  * The HTTP server on the hub is single threaded, which means there can be no parallel requests
  * or we risk running into them being dropped. A message queue is implemented to prevent this.
@@ -27,11 +33,11 @@ export default class Http implements ITransport {
 
   private emitter: EventEmitter;
 
-  private knownBufferPage = "";
-
   private mutex = new Mutex();
 
-  private listen = false;
+  private lastRead = new Stack<number>();
+
+  private looper: AsyncLoop;
 
   constructor(config: ClientConfig) {
     this.config = config;
@@ -41,26 +47,34 @@ export default class Http implements ITransport {
       keepAliveMsecs: 5000, // Be nice and give the socket back in 5sec.
     });
     this.log = new Logger("HTTP", undefined, config.logLevel);
+    this.looper = new AsyncLoop(500, this.log, this.fetchBuf);
   }
 
   setListen(value: boolean): void {
     this.log.debug(`listening ${value}`);
-    this.listen = value;
+    // this.listen = value;
   }
 
-  open(): void {
+  async open(): Promise<void> {
     // Start event loop to keep checking for the buffer.
-    // Http.log.debug('Starting event buffer loop');
-    // this.looper.start();
+    this.log.debug("Starting event buffer loop");
+    await this.clearBuffer();
+    this.looper.start();
   }
 
   close(): void {
     // TODO: This should just check the buffer one last time and respond to any remaining messages.
-    // this.looper.stop();
+    this.looper.stop();
   }
 
-  fetchBuf = async () => {
-    this.log.debug("Fetching buffer");
+  fetchBuf = async (): Promise<void> => {
+    let lastStop = 0;
+
+    if (this.lastRead.size() !== 0) {
+      lastStop = this.lastRead.pop();
+    }
+
+    // this.log.debug("Fetching buffer");
     const { data } = await this.httpGet({
       path: "/buffstatus.xml",
     });
@@ -68,33 +82,38 @@ export default class Http implements ITransport {
     // data looks like <response><BS>(202 characters of hex)</BS></response>
     // in lieu of using an XML parser adding another library dependency, we will
     // just use a bit of regex to parse it.
-    let raw = /BS>([^<]+)<\/BS/g.exec(data)[1];
-    if (raw.length === 202) {
-      // The last 2 bytes are the length of 'good' data
-      const length = Number.parseInt(raw.slice(200), 16);
-      this.log.debug(`Raw response (length ${length})`);
-      raw = raw.slice(0, Math.max(0, length));
-    }
-    let result = raw;
-    if (
-      this.knownBufferPage.length &&
-      raw.slice(0, Math.max(0, this.knownBufferPage.length)) ===
-        this.knownBufferPage
-    ) {
-      result = raw.slice(this.knownBufferPage.length);
-    }
-    this.knownBufferPage = raw;
-    if (result.length) {
-      this.log.debug(`good buffer length: ${raw.length}`);
-      this.emitter.emit("buffer", result);
+    const raw = /BS>([^<]+)<\/BS/g.exec(data)[1];
+    const rawText = raw.slice(0, 200);
+    const thisStop = parseInt(raw.slice(-2), 16);
+    let buffer = "";
+
+    if (rawText === ZERO_FILLED_TEXT) {
+      // If the result is just 0s, nothing to see here, move on.
+      return;
     }
 
-    if (raw.length > 30 && false) {
-      await this.clearBuffer();
+    if (thisStop > lastStop) {
+      this.log.debug(`Raw buffer: ${rawText}`);
+      this.log.debug(`Buffer from ${lastStop} to ${thisStop}`);
+      buffer = rawText.slice(lastStop, thisStop);
+    } else if (thisStop < lastStop) {
+      this.log.debug(`Raw buffer: ${rawText}`);
+      this.log.debug(`Buffer from ${lastStop} to 200 and 0 to ${thisStop}`);
+      let bufferHi = rawText.slice(lastStop, 200);
+
+      if (bufferHi === "".padStart(bufferHi.length, "0")) {
+        // The buffer was probably reset since the last read
+        bufferHi = "";
+      }
+
+      const bufferLow = rawText.slice(0, thisStop);
+      buffer = `${bufferHi}${bufferLow}`;
     }
 
-    if (this.listen) {
-      setTimeout(this.fetchBuf, 50);
+    this.lastRead.push(thisStop);
+
+    if (buffer.length > 0) {
+      this.emitter.emit("buffer", buffer);
     }
   };
 
@@ -118,13 +137,15 @@ export default class Http implements ITransport {
         ...requestOptions,
       };
 
-      this.log.debug(`GET request to http://${host}:${port}${options.path}`);
+      // this.log.debug(`GET request to http://${host}:${port}${options.path}`);
 
       return new Promise((resolve, reject) => {
         request(options, (response) => {
+          /*
           this.log.debug(
             `Response Code: ${response.statusCode}, ${response.statusMessage}`
           );
+          */
           if (response.statusCode !== 200) {
             reject(response.statusMessage);
             return;
@@ -157,7 +178,7 @@ export default class Http implements ITransport {
 
     // Schedule this 50ms after to allow the hub time
     // to get it's ducks in a row.
-    setTimeout(this.fetchBuf, 50);
+    // setTimeout(this.fetchBuf, 50);
 
     return result;
   }
