@@ -76,7 +76,7 @@ enum MessageFlagType {
 
 const EXTENDED_MESSAGE = 0x10;
 
-class Flags {
+export class Flags {
   type: MessageFlagType;
 
   extended: number;
@@ -127,6 +127,7 @@ const message = <TMessage>(id: number, ...fields: MessageField[]) => {
 
   builder.id = id;
   builder.byteLength = sum(fields.map((field) => field.byteLength));
+  builder.isExtended = false;
 
   return builder;
 };
@@ -144,6 +145,7 @@ type ExtendedMessage = {
   flags: Flags;
   cmd1: number;
   cmd2: number;
+  userData?: UserData;
 };
 
 export const sendAllLinkMessage = message<SendAllLinkMessage>(
@@ -154,16 +156,44 @@ export const sendAllLinkMessage = message<SendAllLinkMessage>(
   int("ack")
 );
 
-export const sendExtendedMessage = message<ExtendedMessage>(
-  MessageId.SEND_EXTENDED,
+const extendedMessageFields = [
   address("address"),
   flags("flags"),
   int("cmd1"),
   int("cmd2"),
+];
+
+export const sendExtendedMessage = message<ExtendedMessage>(
+  MessageId.SEND_EXTENDED,
+  ...extendedMessageFields
+);
+
+export const sendExtendedMessageExtended = message<ExtendedMessage>(
+  MessageId.SEND_EXTENDED,
+  ...extendedMessageFields,
   userData("userData")
+);
+sendExtendedMessageExtended.isExtended = true;
+
+type StandardReceivedMessage = {
+  address: InsteonId;
+  target: InsteonId;
+  flags: Flags;
+  cmd1: number;
+  cmd2: number;
+};
+
+export const standardReceivedMessage = message<StandardReceivedMessage>(
+  MessageId.STANDARD_RECEIVED,
+  address("address"),
+  address("target"),
+  flags("flags"),
+  int("cmd1"),
+  int("cmd2")
 );
 
 export const messages = {
   sendAllLinkMessage,
   sendExtendedMessage,
+  standardReceivedMessage,
 };

@@ -39,6 +39,8 @@ export default class Http implements ITransport {
 
   private looper: AsyncLoop;
 
+  private lastBuffer = "";
+
   constructor(config: ClientConfig) {
     this.config = config;
     this.agent = new Agent({
@@ -70,10 +72,6 @@ export default class Http implements ITransport {
   fetchBuf = async (): Promise<void> => {
     let lastStop = 0;
 
-    if (this.lastRead.size() !== 0) {
-      lastStop = this.lastRead.pop();
-    }
-
     // this.log.debug("Fetching buffer");
     const { data } = await this.httpGet({
       path: "/buffstatus.xml",
@@ -87,9 +85,20 @@ export default class Http implements ITransport {
     const thisStop = parseInt(raw.slice(-2), 16);
     let buffer = "";
 
+    // If the result is just 0s, nothing to see here, move on.
     if (rawText === ZERO_FILLED_TEXT) {
-      // If the result is just 0s, nothing to see here, move on.
       return;
+    }
+
+    // Nothing new happened.
+    if (this.lastBuffer === rawText) {
+      return;
+    }
+
+    this.lastBuffer = rawText;
+
+    if (this.lastRead.size() !== 0) {
+      lastStop = this.lastRead.pop();
     }
 
     if (thisStop > lastStop) {

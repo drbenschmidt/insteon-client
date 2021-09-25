@@ -42,7 +42,7 @@ export default class AsyncLoop {
   }
 
   tick = async () => {
-    this.log.debug("Tick Start");
+    // this.log.debug("Tick Start");
     try {
       await this.onTick();
     } catch (error) {

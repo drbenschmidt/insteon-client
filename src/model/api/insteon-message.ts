@@ -93,7 +93,6 @@ export const buildDeviceCommand = (request: InsteonRequest): InsteonRequest => {
     request.command2 ?? "00"
   }${userData}`;
 
-  // eslint-disable-next-line unicorn/no-null
   return assign(create(null), request, {
     type,
     userData,

@@ -37,21 +37,23 @@ const dim = async (light: Light) => {
   await client.open();
 
   // Just keep running, let the console logging show packets.
-  await sleep(60 * 60 * 1000);
+  // await sleep(60 * 60 * 1000);
 
   // const light = client.getDevice("56.21.93");
-  const light = client.getDevice("56.32.CA");
+  const light = client.getDevice("56.38.5C");
+
+  await light.beep();
 
   // 025056219352C4EC202EFC
   // 025056219352C4EC201100
   // await light.turnOffFast();
 
-  await getLevel(light);
+  // await getLevel(light);
 
   // await dim(light);
-  await getInfo(light);
+  // await getInfo(light);
 
   // parseTest();
 
-  // await sleep(2000);
+  await sleep(2000 * 1000);
 })().catch(console.error);

@@ -3,7 +3,7 @@ import { ITransport } from "../transport/itransport";
 import Logger, { LogLevel } from "../utils/logger";
 import { ClientConfig } from "../model/config";
 import MessageHandler from "./messaging/handler";
-import MessageHandler2 from "./messaging/handler2";
+import { process } from "./messaging/handler2";
 import Mutex from "../utils/mutex";
 import {
   InsteonRequestWrapper,
@@ -21,7 +21,7 @@ export type ClientProperties = {
 export default class Client extends EventEmitter {
   private transport: ITransport;
 
-  private messageHandler: MessageHandler2;
+  // private messageHandler: MessageHandler2;
 
   private sendCommandMutex = new Mutex();
 
@@ -37,8 +37,7 @@ export default class Client extends EventEmitter {
     this.transport = transport;
     transport.pipeEvents(this);
 
-    this.messageHandler = new MessageHandler2();
-    this.on("buffer", this.messageHandler.process);
+    this.on("buffer", process);
   }
 
   static async createFor2245(config: ClientConfig): Promise<Client> {
