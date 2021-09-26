@@ -7,6 +7,7 @@ import Mutex from "../utils/mutex";
 import { InsteonRequest } from "../model/api/insteon-message";
 import { Stack } from "../utils/stack";
 import AsyncLoop from "../utils/async-loop";
+import { toByteArray } from "../model/util";
 
 const { parseInt } = Number;
 
@@ -122,7 +123,7 @@ export default class Http implements ITransport {
     this.lastRead.push(thisStop);
 
     if (buffer.length > 0) {
-      this.emitter.emit("buffer", buffer);
+      this.emitter.emit("buffer", toByteArray(buffer));
     }
   };
 
