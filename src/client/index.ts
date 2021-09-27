@@ -10,9 +10,14 @@ import Protocol from "./protocol";
 import Context from "./context";
 
 export type ClientProperties = {
-  transport: ITransport;
+  transportFn: (context: Context) => ITransport;
   logLevel?: LogLevel;
 };
+
+export const timeout = (time: number): Promise<void> =>
+  new Promise((resolve, reject) =>
+    setTimeout(() => reject(new Error(`${time}ms timeout elapsed`)), time)
+  );
 
 export default class Client {
   private transport: ITransport;
@@ -22,22 +27,22 @@ export default class Client {
   log: Logger;
 
   constructor(properties: ClientProperties) {
-    const { transport, logLevel } = properties;
+    const { transportFn, logLevel } = properties;
 
     this.context = new Context({ logLevel });
-    // TODO: rename to setEmitter?
-    transport.pipeEvents(this.context.emitter);
-
+    this.transport = transportFn(this.context);
     this.log = new Logger("Client", this.context.logger);
-    this.protocol = new Protocol({ transport, context: this.context });
-    this.transport = transport;
+    this.protocol = new Protocol({
+      transport: this.transport,
+      context: this.context,
+    });
   }
 
   static async createFor2245(config: ClientConfig): Promise<Client> {
     const HttpTransport = (await import("../transport/http")).default;
-    const transport = new HttpTransport(config);
+    const transport = (context: Context) => new HttpTransport(config, context);
 
-    return new Client({ transport, logLevel: config.logLevel });
+    return new Client({ transportFn: transport, logLevel: config.logLevel });
   }
 
   async open(): Promise<void> {
@@ -50,11 +55,12 @@ export default class Client {
       // This helps prevent weird issues with getting messages after sending them.
       await sleep(100);
 
-      return new Promise((resolve, reject) => {
+      const requestPromise = new Promise((resolve, reject) => {
         // TODO: Add a timeout, do a promise race, clean up once on timeout.
         this.context.emitter.once(
           `command_${request.destinationId.toString()}`,
           (response: InsteonResponse) => {
+            this.log.debug("[sendCommand] Message Received", response);
             resolve(response);
           }
         );
@@ -62,6 +68,10 @@ export default class Client {
         // Send the command!
         this.transport.send(request).catch(reject);
       });
+
+      const timeoutPromise = timeout(5000);
+
+      return Promise.race([requestPromise, timeoutPromise]);
     });
   }
 

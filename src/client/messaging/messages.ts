@@ -78,11 +78,8 @@ const EXTENDED_MESSAGE = 0x10;
 
 export class Flags {
   type: MessageFlagType;
-
   extended: number;
-
   hopsLeft: number;
-
   maxHops: number;
 
   constructor(value: number) {

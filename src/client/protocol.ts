@@ -22,20 +22,16 @@ class Protocol {
   }
 
   onBuffer = (buffer: number[]): void => {
-    // console.log(this.context);
     const { emitter } = this.context;
-    // TODO: Make process take buffer and context. Return array of messages.
     const messages = process(buffer, this.context);
 
     messages.forEach((message) => {
-      // console.log("[BEN]", this.context.emitter);
-      // console.log("[BEN]", message);
       // Emit messages to listeners.
       emitter.emit("message", message);
 
       if (hasAddress(message)) {
-        emitter.emit(`message_${message.address}`);
-        emitter.emit(`command_${message.address}`);
+        emitter.emit(`message_${message.address}`, message);
+        emitter.emit(`command_${message.address}`, message);
       }
     });
   };

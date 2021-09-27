@@ -8,6 +8,7 @@ import { InsteonRequest } from "../model/api/insteon-message";
 import { Stack } from "../utils/stack";
 import AsyncLoop from "../utils/async-loop";
 import { toByteArray } from "../model/util";
+import Context from "../client/context";
 
 const { parseInt } = Number;
 
@@ -27,30 +28,24 @@ const ZERO_FILLED_TEXT = "".padEnd(200, "0");
  */
 export default class Http implements ITransport {
   private log: Logger;
-
   private config: ClientConfig;
-
   private agent: Agent;
-
   private emitter: EventEmitter;
-
   private mutex = new Mutex();
-
   private lastRead = new Stack<number>();
-
   private looper: AsyncLoop;
-
   private lastBuffer = "";
 
-  constructor(config: ClientConfig) {
+  constructor(config: ClientConfig, context: Context) {
     this.config = config;
     this.agent = new Agent({
       maxSockets: 1, // Most important config: insteon hub does not like having tons of sockets
       keepAlive: true,
       keepAliveMsecs: 5000, // Be nice and give the socket back in 5sec.
     });
-    this.log = new Logger("HTTP", undefined, config.logLevel);
+    this.log = new Logger("HTTP", context.logger);
     this.looper = new AsyncLoop(500, this.log, this.fetchBuf);
+    this.emitter = context.emitter;
   }
 
   setListen(value: boolean): void {
