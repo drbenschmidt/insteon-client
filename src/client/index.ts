@@ -8,6 +8,7 @@ import Light from "../model/device/light";
 import sleep from "../utils/sleep";
 import Protocol from "./protocol";
 import Context from "./context";
+import DeviceBase from "../model/device/device-base";
 
 export type ClientProperties = {
   transportFn: (context: Context) => ITransport;
@@ -49,24 +50,23 @@ export default class Client {
     await this.transport.open();
   }
 
-  async sendCommand(request: InsteonRequest): Promise<InsteonResponse> {
-    // TODO: check for transport ready.
+  async sendRaw(raw: string, awaitMessageType?: string): Promise<any> {
     return this.sendCommandMutex.dispatch(async () => {
       // This helps prevent weird issues with getting messages after sending them.
       await sleep(100);
 
       const requestPromise = new Promise((resolve, reject) => {
-        // TODO: Add a timeout, do a promise race, clean up once on timeout.
-        this.context.emitter.once(
-          `command_${request.destinationId.toString()}`,
-          (response: InsteonResponse) => {
-            this.log.debug("[sendCommand] Message Received", response);
-            resolve(response);
-          }
-        );
+        let type = awaitMessageType;
+        if (!type) {
+          type = `${raw[2]}${raw[3]}`;
+        }
+        console.log("waiting for", `message_type_${type}`);
+        // TODO: make this less dumb.
+        this.context.emitter.once(`message_type_${type}`, (response: any) => {
+          resolve(response);
+        });
 
-        // Send the command!
-        this.transport.send(request).catch(reject);
+        this.transport.send({ raw }).catch(reject);
       });
 
       const timeoutPromise = timeout(5000);
@@ -75,7 +75,34 @@ export default class Client {
     });
   }
 
-  getDevice(id: string): Light {
+  async sendCommand(request: InsteonRequest): Promise<InsteonResponse> {
+    // TODO: check for transport ready.
+    return this.sendCommandMutex.dispatch(async () => {
+      // This helps prevent weird issues with getting messages after sending them.
+      await sleep(100);
+
+      const requestPromise = new Promise((resolve, reject) => {
+        if (request.destinationId) {
+          this.context.emitter.once(
+            `command_${request.destinationId.toString()}`,
+            (response: InsteonResponse) => {
+              this.log.debug("[sendCommand] Message Received", response);
+              resolve(response);
+            }
+          );
+        }
+
+        // Send the command!
+        this.transport.send({ raw: request.raw }).catch(reject);
+      });
+
+      const timeoutPromise = timeout(5000);
+
+      return Promise.race([requestPromise, timeoutPromise]);
+    });
+  }
+
+  getDevice(id: string): DeviceBase {
     return new Light(id, this);
   }
 }

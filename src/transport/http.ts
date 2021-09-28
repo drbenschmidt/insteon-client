@@ -4,7 +4,6 @@ import { ITransport } from "./itransport";
 import Logger from "../utils/logger";
 import { ClientConfig } from "../model/config";
 import Mutex from "../utils/mutex";
-import { InsteonRequest } from "../model/api/insteon-message";
 import { Stack } from "../utils/stack";
 import AsyncLoop from "../utils/async-loop";
 import { toByteArray } from "../model/util";
@@ -88,6 +87,7 @@ export default class Http implements ITransport {
 
     // Nothing new happened.
     if (this.lastBuffer === rawText) {
+      // this.log.debug("Buffer hasn't changed.");
       return;
     }
 
@@ -174,7 +174,7 @@ export default class Http implements ITransport {
     });
   }
 
-  async send(message: InsteonRequest): Promise<{ data: string }> {
+  async send(message: { raw: string }): Promise<{ data: string }> {
     const options = {
       path: `/3?${message.raw}=I=3`,
     };

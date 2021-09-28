@@ -1,3 +1,4 @@
+import { toHex } from "../model/util";
 import { ITransport } from "../transport/itransport";
 import Context from "./context";
 import { process } from "./messaging/handler2";
@@ -28,10 +29,13 @@ class Protocol {
     messages.forEach((message) => {
       // Emit messages to listeners.
       emitter.emit("message", message);
+      console.log(`message_type_${toHex(message.id, 2)}`);
+      emitter.emit(`message_type_${toHex(message.id, 2)}`, message);
 
       if (hasAddress(message)) {
-        emitter.emit(`message_${message.address}`, message);
-        emitter.emit(`command_${message.address}`, message);
+        const addrMessage = message as any;
+        emitter.emit(`message_${addrMessage.address}`, message);
+        emitter.emit(`command_${addrMessage.address}`, message);
       }
     });
   };

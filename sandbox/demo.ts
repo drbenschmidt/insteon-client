@@ -1,4 +1,5 @@
 import { Client } from "../src";
+import { InsteonRequestWrapper } from "../src/model/api/insteon-message";
 import type Light from "../src/model/device/light";
 import { LogLevel } from "../src/utils/logger";
 import sleep from "../src/utils/sleep";
@@ -40,9 +41,16 @@ const dim = async (light: Light) => {
   // await sleep(60 * 60 * 1000);
 
   // const light = client.getDevice("56.21.93");
-  const light = client.getDevice("56.38.5C");
+  // const light = client.getDevice("56.38.5C");
+  await client.sendRaw("0269");
 
-  await light.beep();
+  for (let i = 0; i < 10; i++) {
+    console.log(`loop ${i}`);
+    // eslint-disable-next-line no-await-in-loop
+    await client.sendRaw("026A", "57");
+  }
+
+  // await light.beep();
 
   // 025056219352C4EC202EFC
   // 025056219352C4EC201100
