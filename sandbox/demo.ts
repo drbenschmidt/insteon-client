@@ -26,6 +26,10 @@ const dim = async (light: Light) => {
   await getLevel(light);
 };
 
+const fetchDevices = (client: Client) => {
+
+};
+
 (async () => {
   const client = await Client.createFor2245({
     user: process.env.INSTEON_USERNAME,
@@ -42,12 +46,19 @@ const dim = async (light: Light) => {
 
   // const light = client.getDevice("56.21.93");
   // const light = client.getDevice("56.38.5C");
-  await client.sendRaw("0269");
 
-  for (let i = 0; i < 10; i++) {
-    console.log(`loop ${i}`);
+  // NOTE: to get every link from modem, we need
+  // to send 0269 to start out with, check for 0269 ACK as a result
+  // then send 026A and wait for 0261 ACK, which should also have a 57 link record in the buffer.
+  // then, keep sending 026A until the response is a NAK, there will be no more 57 messages.
+  // Have a handler listen for all 57s until the NAK shows up and bam, we good!
+
+  await client.sendRaw("0269", "57");
+
+  for (let i = 0; i < 200; i++) {
+    // console.log(`loop ${i}`);
     // eslint-disable-next-line no-await-in-loop
-    await client.sendRaw("026A", "57");
+    await client.sendRaw("026A", "57").catch(console.error);
   }
 
   // await light.beep();

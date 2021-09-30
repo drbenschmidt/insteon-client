@@ -31,7 +31,7 @@ export default class Http implements ITransport {
   private agent: Agent;
   private emitter: EventEmitter;
   private mutex = new Mutex();
-  private lastRead = new Stack<number>();
+  private lastRead = 0;
   private looper: AsyncLoop;
   private lastBuffer = "";
 
@@ -45,11 +45,6 @@ export default class Http implements ITransport {
     this.log = new Logger("HTTP", context.logger);
     this.looper = new AsyncLoop(500, this.log, this.fetchBuf);
     this.emitter = context.emitter;
-  }
-
-  setListen(value: boolean): void {
-    this.log.debug(`listening ${value}`);
-    // this.listen = value;
   }
 
   async open(): Promise<void> {
@@ -77,7 +72,7 @@ export default class Http implements ITransport {
     // just use a bit of regex to parse it.
     const raw = /BS>([^<]+)<\/BS/g.exec(data)[1];
     const rawText = raw.slice(0, 200);
-    const thisStop = parseInt(raw.slice(-2), 16);
+    let thisStop = parseInt(raw.slice(-2), 16);
     let buffer = "";
 
     // If the result is just 0s, nothing to see here, move on.
@@ -86,23 +81,20 @@ export default class Http implements ITransport {
     }
 
     // Nothing new happened.
-    if (this.lastBuffer === rawText) {
-      // this.log.debug("Buffer hasn't changed.");
+    /*if (this.lastBuffer === rawText) {
+      this.log.debug("Buffer hasn't changed.");
       return;
-    }
+    }*/
 
     this.lastBuffer = rawText;
+    lastStop = this.lastRead;
 
-    if (this.lastRead.size() !== 0) {
-      lastStop = this.lastRead.pop();
-    }
+    this.log.debug(`Raw buffer: ${rawText}`);
 
     if (thisStop > lastStop) {
-      this.log.debug(`Raw buffer: ${rawText}`);
       this.log.debug(`Buffer from ${lastStop} to ${thisStop}`);
       buffer = rawText.slice(lastStop, thisStop);
     } else if (thisStop < lastStop) {
-      this.log.debug(`Raw buffer: ${rawText}`);
       this.log.debug(`Buffer from ${lastStop} to 200 and 0 to ${thisStop}`);
       let bufferHi = rawText.slice(lastStop, 200);
 
@@ -113,9 +105,11 @@ export default class Http implements ITransport {
 
       const bufferLow = rawText.slice(0, thisStop);
       buffer = `${bufferHi}${bufferLow}`;
+    } else {
+      this.log.debug(`oh no! ${thisStop} === ${lastStop}`);
     }
 
-    this.lastRead.push(thisStop);
+    this.lastRead = thisStop;
 
     if (buffer.length > 0) {
       this.emitter.emit("buffer", toByteArray(buffer));
@@ -124,6 +118,7 @@ export default class Http implements ITransport {
 
   private async clearBuffer() {
     this.log.debug("clearing buffer");
+    this.lastRead = 0;
 
     await this.httpGet({
       path: "/1?XB=M=1",
@@ -179,16 +174,20 @@ export default class Http implements ITransport {
       path: `/3?${message.raw}=I=3`,
     };
 
+    this.log.debug(`sending "${message.raw}"`);
+
     const result = await this.httpGet(options);
+
+    // TODO: Make the get also return the status so we can reject more better?
+
+    // Set lastRead to 0 because after we sent a command we get a cleared buffer.
+    this.lastRead = 0;
 
     // Schedule this 50ms after to allow the hub time
     // to get it's ducks in a row.
+    this.looper.scheduleIn(100);
     // setTimeout(this.fetchBuf, 50);
 
     return result;
-  }
-
-  pipeEvents(emitter: EventEmitter): void {
-    this.emitter = emitter;
   }
 }

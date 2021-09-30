@@ -15,7 +15,7 @@ export type ClientProperties = {
   logLevel?: LogLevel;
 };
 
-export const timeout = (time: number): Promise<void> =>
+export const timeout = <T>(time: number): Promise<T> =>
   new Promise((resolve, reject) =>
     setTimeout(() => reject(new Error(`${time}ms timeout elapsed`)), time)
   );
@@ -50,28 +50,30 @@ export default class Client {
     await this.transport.open();
   }
 
-  async sendRaw(raw: string, awaitMessageType?: string): Promise<any> {
-    return this.sendCommandMutex.dispatch(async () => {
+  async sendRaw<TMessage>(
+    raw: string,
+    awaitMessageType: string
+  ): Promise<TMessage> {
+    return this.sendCommandMutex.dispatch<TMessage>(async () => {
       // This helps prevent weird issues with getting messages after sending them.
-      await sleep(100);
+      await sleep(10);
 
-      const requestPromise = new Promise((resolve, reject) => {
-        let type = awaitMessageType;
-        if (!type) {
-          type = `${raw[2]}${raw[3]}`;
-        }
-        console.log("waiting for", `message_type_${type}`);
+      const requestPromise = new Promise<TMessage>((resolve, reject) => {
+        // console.log("waiting for", `message_type_${type}`);
         // TODO: make this less dumb.
-        this.context.emitter.once(`message_type_${type}`, (response: any) => {
-          resolve(response);
-        });
+        this.context.emitter.once(
+          `message_type_${awaitMessageType}`,
+          (response: any) => {
+            resolve(response);
+          }
+        );
 
         this.transport.send({ raw }).catch(reject);
       });
 
-      const timeoutPromise = timeout(5000);
+      const timeoutPromise = timeout<TMessage>(5000);
 
-      return Promise.race([requestPromise, timeoutPromise]);
+      return Promise.race<TMessage>([requestPromise, timeoutPromise]);
     });
   }
 

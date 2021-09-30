@@ -10,7 +10,7 @@ class Context {
   logger: Logger;
 
   constructor(props: ContextProps) {
-    this.logger = new Logger("Context", undefined, props.logLevel);
+    this.logger = new Logger("Insteon", undefined, props.logLevel);
   }
 }
 
