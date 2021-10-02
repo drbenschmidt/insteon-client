@@ -27,6 +27,8 @@
     "no-console": 0,
     "unicorn/number-literal-case": "off",
     "no-plusplus": "off",
-    "@typescript-eslint/lines-between-class-members": "off"
+    "@typescript-eslint/lines-between-class-members": "off",
+    "max-classes-per-file": "off",
+    "no-await-in-loop": "off"
   }
 }

@@ -252,7 +252,7 @@ export const standardReceivedMessage = message<StandardReceivedMessage>(
   int("cmd2")
 );
 
-interface AllLinkRecordResponseMessage extends AbstractMessage {
+export interface AllLinkRecordResponseMessage extends AbstractMessage {
   flags: AllLinkRecordFlags;
   group: number;
   address: InsteonId;
@@ -273,7 +273,7 @@ export const allLinkRecordResponseMessage = message<
   int("data3")
 );
 
-interface FirstAllLinkRecordMessage extends AbstractMessage {
+export interface FirstAllLinkRecordMessage extends AbstractMessage {
   ack: number;
 }
 
@@ -282,7 +282,7 @@ export const firstAllLinkRecordMessage = message<FirstAllLinkRecordMessage>(
   int("ack")
 );
 
-interface NextAllLinkRecordMessage extends AbstractMessage {
+export interface NextAllLinkRecordMessage extends AbstractMessage {
   ack: number;
 }
 

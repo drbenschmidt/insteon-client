@@ -1,5 +1,4 @@
 import { Client } from "../src";
-import { InsteonRequestWrapper } from "../src/model/api/insteon-message";
 import type Light from "../src/model/device/light";
 import { LogLevel } from "../src/utils/logger";
 import sleep from "../src/utils/sleep";
@@ -26,17 +25,13 @@ const dim = async (light: Light) => {
   await getLevel(light);
 };
 
-const fetchDevices = (client: Client) => {
-
-};
-
 (async () => {
   const client = await Client.createFor2245({
     user: process.env.INSTEON_USERNAME,
     pass: process.env.INSTEON_PASSWORD,
     host: "192.168.1.48",
     port: 25105,
-    logLevel: LogLevel.Debug,
+    logLevel: LogLevel.Info,
   });
 
   await client.open();
@@ -53,13 +48,8 @@ const fetchDevices = (client: Client) => {
   // then, keep sending 026A until the response is a NAK, there will be no more 57 messages.
   // Have a handler listen for all 57s until the NAK shows up and bam, we good!
 
-  await client.sendRaw("0269", "57");
-
-  for (let i = 0; i < 200; i++) {
-    // console.log(`loop ${i}`);
-    // eslint-disable-next-line no-await-in-loop
-    await client.sendRaw("026A", "57").catch(console.error);
-  }
+  await client.db.init();
+  console.log(`Fetched ${client.db.devices.length} devices!`);
 
   // await light.beep();
 

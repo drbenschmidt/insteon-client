@@ -4,7 +4,6 @@ import { ITransport } from "./itransport";
 import Logger from "../utils/logger";
 import { ClientConfig } from "../model/config";
 import Mutex from "../utils/mutex";
-import { Stack } from "../utils/stack";
 import AsyncLoop from "../utils/async-loop";
 import { toByteArray } from "../model/util";
 import Context from "../client/context";
@@ -72,19 +71,13 @@ export default class Http implements ITransport {
     // just use a bit of regex to parse it.
     const raw = /BS>([^<]+)<\/BS/g.exec(data)[1];
     const rawText = raw.slice(0, 200);
-    let thisStop = parseInt(raw.slice(-2), 16);
+    const thisStop = parseInt(raw.slice(-2), 16);
     let buffer = "";
 
     // If the result is just 0s, nothing to see here, move on.
     if (rawText === ZERO_FILLED_TEXT) {
       return;
     }
-
-    // Nothing new happened.
-    /*if (this.lastBuffer === rawText) {
-      this.log.debug("Buffer hasn't changed.");
-      return;
-    }*/
 
     this.lastBuffer = rawText;
     lastStop = this.lastRead;
@@ -106,7 +99,7 @@ export default class Http implements ITransport {
       const bufferLow = rawText.slice(0, thisStop);
       buffer = `${bufferHi}${bufferLow}`;
     } else {
-      this.log.debug(`oh no! ${thisStop} === ${lastStop}`);
+      // this.log.debug(`oh no! ${thisStop} === ${lastStop}`);
     }
 
     this.lastRead = thisStop;
@@ -146,6 +139,7 @@ export default class Http implements ITransport {
             `Response Code: ${response.statusCode}, ${response.statusMessage}`
           );
           */
+
           if (response.statusCode !== 200) {
             reject(response.statusMessage);
             return;
@@ -186,7 +180,6 @@ export default class Http implements ITransport {
     // Schedule this 50ms after to allow the hub time
     // to get it's ducks in a row.
     this.looper.scheduleIn(100);
-    // setTimeout(this.fetchBuf, 50);
 
     return result;
   }

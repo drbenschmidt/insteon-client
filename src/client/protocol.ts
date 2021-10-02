@@ -29,7 +29,6 @@ class Protocol {
     messages.forEach((message) => {
       // Emit messages to listeners.
       emitter.emit("message", message);
-      console.log(`message_type_${toHex(message.id, 2)}`);
       emitter.emit(`message_type_${toHex(message.id, 2)}`, message);
 
       if (hasAddress(message)) {
