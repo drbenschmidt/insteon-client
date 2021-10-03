@@ -1,4 +1,5 @@
 import { Client } from "../src";
+import InsteonId from "../src/model/api/insteon-id";
 import type Light from "../src/model/device/light";
 import { LogLevel } from "../src/utils/logger";
 import sleep from "../src/utils/sleep";
@@ -40,16 +41,19 @@ const dim = async (light: Light) => {
   // await sleep(60 * 60 * 1000);
 
   // const light = client.getDevice("56.21.93");
+
+  // Island Lights
   // const light = client.getDevice("56.38.5C");
 
-  // NOTE: to get every link from modem, we need
-  // to send 0269 to start out with, check for 0269 ACK as a result
-  // then send 026A and wait for 0261 ACK, which should also have a 57 link record in the buffer.
-  // then, keep sending 026A until the response is a NAK, there will be no more 57 messages.
-  // Have a handler listen for all 57s until the NAK shows up and bam, we good!
-
-  await client.db.init();
+  await client.db.init(true);
   console.log(`Fetched ${client.db.devices.length} devices!`);
+
+  // const records = client.db.getDeviceRecords(new InsteonId("56.38.5C"));
+
+  // console.log(records);
+
+  const devices = client.db.getDevices();
+  console.log(devices);
 
   // await light.beep();
 

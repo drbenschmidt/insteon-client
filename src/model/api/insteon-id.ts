@@ -29,4 +29,20 @@ export default class InsteonId {
   toRawString(): string {
     return this.raw;
   }
+
+  toJSON(): string {
+    return this.value;
+  }
+
+  equals(obj: unknown): boolean {
+    if (typeof obj === "string") {
+      return this.toString() === obj;
+    }
+
+    if (obj instanceof InsteonId) {
+      return this.toString() === obj.toString();
+    }
+
+    return false;
+  }
 }

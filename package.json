@@ -22,7 +22,11 @@
     "url": "https://github.com/drbenschmidt/insteon-client/issues"
   },
   "homepage": "https://github.com/drbenschmidt/insteon-client#readme",
+  "dependencies": {
+    "fs-extra": "10.0.0"
+  },
   "devDependencies": {
+    "@types/fs-extra": "9.0.13",
     "@types/node": "^14.11.10",
     "@typescript-eslint/eslint-plugin": "^4.5.0",
     "@typescript-eslint/parser": "^4.5.0",

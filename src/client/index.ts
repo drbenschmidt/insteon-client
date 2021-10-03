@@ -9,12 +9,7 @@ import sleep from "../utils/sleep";
 import Protocol from "./protocol";
 import Context from "./context";
 import DeviceBase from "../model/device/device-base";
-import { NextAllLinkRecordMessage } from "./messaging/messages";
-
-export enum AckNak {
-  ACK = 0x06,
-  NAK = 0x15,
-}
+import DeviceDatabase from "./database";
 
 export type ClientProperties = {
   transportFn: (context: Context) => ITransport;
@@ -25,54 +20,6 @@ export const timeout = <T>(time: number): Promise<T> =>
   new Promise((resolve, reject) =>
     setTimeout(() => reject(new Error(`${time}ms timeout elapsed`)), time)
   );
-
-class DeviceDatabase {
-  private client: Client;
-  private context: Context;
-  readonly devices: any[] = [];
-
-  constructor(client: Client, context: Context) {
-    this.client = client;
-    this.context = context;
-  }
-
-  async init(forceRefresh = true): Promise<void> {
-    this.context.logger.info("Initializing Device Database");
-    if (forceRefresh || this.devices.length === 0) {
-      await this.fetchFromModem();
-    } else {
-      await this.fetchFromCache();
-    }
-  }
-
-  async fetchFromCache(): Promise<void> {
-
-  }
-
-  async fetchFromModem(): Promise<void> {
-    let fetching = true;
-    const onDeviceMessage = (result) => {
-      this.context.logger.info("Found device!");
-      this.devices.push(result);
-    };
-    this.context.emitter.on("message_type_57", onDeviceMessage);
-
-    // Send the first one.
-    await this.client.sendRaw("0269", "69");
-
-    while (fetching) {
-      const result = await this.client.sendRaw<NextAllLinkRecordMessage>(
-        "026A",
-        "6A"
-      );
-
-      if (result.ack === AckNak.NAK) {
-        fetching = false;
-        this.context.emitter.off("message_type_57", onDeviceMessage);
-      }
-    }
-  }
-}
 
 export default class Client {
   private transport: ITransport;

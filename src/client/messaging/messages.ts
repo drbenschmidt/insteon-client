@@ -255,7 +255,7 @@ export const standardReceivedMessage = message<StandardReceivedMessage>(
 export interface AllLinkRecordResponseMessage extends AbstractMessage {
   flags: AllLinkRecordFlags;
   group: number;
-  address: InsteonId;
+  target: InsteonId;
   data1: number;
   data2: number;
   data3: number;
