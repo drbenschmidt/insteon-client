@@ -1,6 +1,6 @@
 import { toHex } from "../../model/util";
 import Context from "../context";
-import { AbstractMessage, Flags, messages } from "./messages";
+import { AbstractMessage, Flags, MessageBuilder, messages } from "./messages";
 
 const trimBuffer = (buffer: number[]) => {
   while (buffer[0] !== 0x02) {
@@ -8,14 +8,17 @@ const trimBuffer = (buffer: number[]) => {
   }
 };
 
-export const getMessageFor = (id: number, flagByte: number) => {
+export const getMessageFor = <T>(
+  id: number,
+  flagByte: number
+): MessageBuilder<T> => {
   const flags = new Flags(flagByte);
   const isExtended = !!flags.extended;
   const builder = Object.values(messages).find(
     (a) => a.id === id && (a.isExtendable ? a.isExtended === isExtended : true)
   );
 
-  return builder;
+  return (builder as unknown) as MessageBuilder<T>;
 };
 
 export const process = (
@@ -28,10 +31,6 @@ export const process = (
 
   // Remove the 0x02, we know we're good.
   buffer.shift();
-
-  // TODO: The flagByte here may mess with finding messages that are shorter
-  // than 5 bytes long.
-  // ex: 6A06|0257E200515071012045
 
   // Take the message ID off, we don't need that in the message body.
   const messageId = buffer.shift();
