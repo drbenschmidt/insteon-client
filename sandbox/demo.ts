@@ -26,6 +26,12 @@ const dim = async (light: Light) => {
   await getLevel(light);
 };
 
+const ID = {
+  KITCHEN_LIGHTS: new InsteonId("56.38.07"),
+  DINETTE_LIGHTS: new InsteonId("56.21.93"),
+  ISLAND_LIGHTS: new InsteonId("56.38.5C"),
+};
+
 (async () => {
   const client = await Client.createFor2245({
     user: process.env.INSTEON_USERNAME,
@@ -52,7 +58,7 @@ const dim = async (light: Light) => {
 
   // console.log(records);
 
-  const devices = client.db.getDevices();
+  const devices = client.db.getLinksForId(ID.DINETTE_LIGHTS);
   console.log(devices);
 
   // await light.beep();

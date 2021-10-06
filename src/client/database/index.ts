@@ -4,9 +4,26 @@ import TypeLookup, { DeviceLookupRecord } from "./lookup";
 import type {
   AllLinkRecordResponseMessage,
   NextAllLinkRecordMessage,
-} from "../messaging/messages";
+} from "../messaging/messages/index";
 import type Client from "..";
 import type Context from "../context";
+
+const applyType = (
+  link: AllLinkRecordResponseMessage
+): AllLinkRecordResponseMessageWithType => {
+  const type = TypeLookup.find(
+    (t) => t.category === link.data1 && t.subcategory === link.data2
+  );
+
+  if (type) {
+    return {
+      ...link,
+      ...type,
+    };
+  }
+
+  return link;
+};
 
 export enum AckNak {
   ACK = 0x06,
@@ -78,22 +95,11 @@ class DeviceDatabase {
   }
 
   getDevices(): AllLinkRecordResponseMessageWithType[] {
-    return this.devices
-      .filter((d) => d.group === 0)
-      .map((d) => {
-        const type = TypeLookup.find(
-          (t) => t.category === d.data1 && t.subcategory === d.data2
-        );
+    return this.devices.filter((d) => d.group === 0).map(applyType);
+  }
 
-        if (type) {
-          return {
-            ...d,
-            ...type,
-          };
-        }
-
-        return d;
-      });
+  getLinksForId(id: InsteonId): AllLinkRecordResponseMessage[] {
+    return this.devices.filter((d) => d.group !== 0 && id.equals(d.target));
   }
 }
 

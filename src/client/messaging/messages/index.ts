@@ -8,6 +8,8 @@ import { standardReceivedMessage } from "./standard-received";
 // Types
 export type { AbstractMessage } from "./types";
 export type { MessageBuilder } from "./message";
+export type { NextAllLinkRecordMessage } from "./next-all-link-record-message";
+export type { AllLinkRecordResponseMessage } from "./all-link-record-response";
 
 // Classes
 export { Flags } from "./fields/flags";

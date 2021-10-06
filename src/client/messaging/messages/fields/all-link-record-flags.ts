@@ -12,6 +12,7 @@ enum AllLinkMode {
 }
 
 export class AllLinkRecordFlags {
+  private original: number;
   inUse: boolean;
   isController: boolean;
   mode: AllLinkMode;
@@ -21,19 +22,38 @@ export class AllLinkRecordFlags {
   bit2: boolean;
   hwm: boolean;
   bit0: boolean;
-  constructor(data: number) {
+
+  constructor(input: number | string) {
+    let data = 0;
+    if (typeof input === "string") {
+      data = parseInt(input, 10);
+    } else {
+      data = input;
+    }
+
+    this.original = data;
     this.inUse = isBitSet(data, 7);
     this.isController = isBitSet(data, 6);
     this.mode = AllLinkMode.RESPONDER;
+
     if (this.isController) {
       this.mode = AllLinkMode.CONTROLLER;
     }
+
     this.bit5 = isBitSet(data, 5);
     this.bit4 = isBitSet(data, 4);
     this.bit3 = isBitSet(data, 3);
     this.bit2 = isBitSet(data, 2);
     this.hwm = !isBitSet(data, 1);
     this.bit0 = isBitSet(data, 0);
+  }
+
+  toString(): string {
+    return this.original.toString();
+  }
+
+  toJSON(): number {
+    return this.original;
   }
 }
 
