@@ -25,7 +25,6 @@ class FileSystemCache implements Cache {
   }
 
   async get<T>(key: string): Promise<T> {
-    console.log("get");
     if (!this.isInitialized) {
       await this.init();
     }
@@ -34,7 +33,6 @@ class FileSystemCache implements Cache {
   }
 
   async set<T>(key: string, value: T): Promise<void> {
-    console.log("set");
     if (!this.isInitialized) {
       await this.init();
     }

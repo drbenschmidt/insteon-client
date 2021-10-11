@@ -98,6 +98,12 @@ class DeviceDatabase {
     return this.devices.filter((d) => d.group === 0).map(applyType);
   }
 
+  getDevice(id: InsteonId): AllLinkRecordResponseMessageWithType {
+    return this.devices
+      .filter((d) => d.group === 0 && id.equals(d.target))
+      .map(applyType)[0];
+  }
+
   getLinksForId(id: InsteonId): AllLinkRecordResponseMessage[] {
     return this.devices.filter((d) => d.group !== 0 && id.equals(d.target));
   }

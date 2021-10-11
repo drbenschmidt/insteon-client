@@ -22,15 +22,18 @@ const extendedMessageFields = [
   int("cmd2"),
 ];
 
+// This message is extendable, but this is the standard message, so don't mark it as extended.
 export const sendExtendedMessage = message<ExtendedMessage>(
   MessageId.SEND_EXTENDED,
   ...extendedMessageFields
 );
+sendExtendedMessage.isExtendable = true;
+sendExtendedMessage.isExtended = false;
 
 export const sendExtendedMessageExtended = message<ExtendedMessage>(
   MessageId.SEND_EXTENDED,
   ...extendedMessageFields,
   userData("userData")
 );
-sendExtendedMessageExtended.isExtended = true;
 sendExtendedMessageExtended.isExtendable = true;
+sendExtendedMessageExtended.isExtended = true;

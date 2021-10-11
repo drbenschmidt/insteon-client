@@ -10,6 +10,7 @@ import Protocol from "./protocol";
 import Context from "./context";
 import DeviceBase from "../model/device/device-base";
 import DeviceDatabase from "./database";
+import InsteonId from "../model/api/insteon-id";
 
 export type ClientProperties = {
   transportFn: (context: Context) => ITransport;
@@ -86,9 +87,10 @@ export default class Client {
       await sleep(10);
 
       const requestPromise = new Promise((resolve, reject) => {
-        if (request.destinationId) {
+        const { destinationId, type } = request;
+        if (destinationId) {
           this.context.emitter.once(
-            `command_${request.destinationId.toString()}`,
+            `command_${type}_${destinationId}`,
             (response: InsteonResponse) => {
               this.log.debug("[sendCommand] Message Received", response);
               resolve(response);
@@ -106,7 +108,15 @@ export default class Client {
     });
   }
 
-  getDevice(id: string): DeviceBase {
+  /*
+  getDevice<T extends DeviceBase>(id: string): T {
+    const device = this.db.getDevice(new InsteonId(id));
+
+    return new Light(id, this);
+  }
+  */
+
+  getLight(id: string): Light {
     return new Light(id, this);
   }
 }

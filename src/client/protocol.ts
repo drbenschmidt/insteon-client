@@ -27,14 +27,16 @@ class Protocol {
     const messages = process(buffer, this.context);
 
     messages.forEach((message) => {
+      const type = toHex(message.id, 2);
+
       // Emit messages to listeners.
       emitter.emit("message", message);
-      emitter.emit(`message_type_${toHex(message.id, 2)}`, message);
+      emitter.emit(`message_${type}`, message);
 
       if (hasAddress(message)) {
         const addrMessage = message as any;
-        emitter.emit(`message_${addrMessage.address}`, message);
-        emitter.emit(`command_${addrMessage.address}`, message);
+        emitter.emit(`message_${type}_${addrMessage.address}`, message);
+        emitter.emit(`command_${type}_${addrMessage.address}`, message);
       }
     });
   };

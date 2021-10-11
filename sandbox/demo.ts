@@ -30,6 +30,7 @@ const ID = {
   KITCHEN_LIGHTS: new InsteonId("56.38.07"),
   DINETTE_LIGHTS: new InsteonId("56.21.93"),
   ISLAND_LIGHTS: new InsteonId("56.38.5C"),
+  OFFICE_FANLINC: new InsteonId("53.32.CA"),
 };
 
 (async () => {
@@ -38,7 +39,7 @@ const ID = {
     pass: process.env.INSTEON_PASSWORD,
     host: "192.168.1.48",
     port: 25105,
-    logLevel: LogLevel.Info,
+    logLevel: LogLevel.Debug,
   });
 
   await client.open();
@@ -51,15 +52,20 @@ const ID = {
   // Island Lights
   // const light = client.getDevice("56.38.5C");
 
-  await client.db.init(true);
-  console.log(`Fetched ${client.db.devices.length} devices!`);
+  await client.db.init();
 
   // const records = client.db.getDeviceRecords(new InsteonId("56.38.5C"));
 
   // console.log(records);
 
-  const devices = client.db.getLinksForId(ID.DINETTE_LIGHTS);
-  console.log(devices);
+  const devices = client.db.getDevice(ID.OFFICE_FANLINC);
+  // console.log(devices);
+
+  const light = client.getLight(ID.ISLAND_LIGHTS.toString());
+
+  const result = await light.getInfo();
+
+  console.log(result);
 
   // await light.beep();
 
@@ -71,8 +77,6 @@ const ID = {
 
   // await dim(light);
   // await getInfo(light);
-
-  // parseTest();
 
   await sleep(2000 * 1000);
 })().catch(console.error);

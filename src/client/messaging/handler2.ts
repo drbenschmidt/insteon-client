@@ -13,9 +13,9 @@ export const getMessageFor = <T>(
   flagByte: number
 ): MessageBuilder<T> => {
   const flags = new Flags(flagByte);
-  const isExtended = !!flags.extended;
+  const isExtended = flags.extended === 1;
   const builder = Object.values(messages).find(
-    (a) => a.id === id && (a.isExtendable ? a.isExtended === isExtended : true)
+    (a) => a.id === id && (a.isExtendable ? a?.isExtended === isExtended : true)
   );
 
   return (builder as unknown) as MessageBuilder<T>;
@@ -34,8 +34,10 @@ export const process = (
 
   // Take the message ID off, we don't need that in the message body.
   const messageId = buffer.shift();
-  const flagByte = buffer[5];
+  const flagByte = buffer[3];
   const builder = getMessageFor(messageId, flagByte);
+
+  console.log("BEN", builder.byteLength);
 
   if (!builder) {
     context.logger.debug(
@@ -61,7 +63,7 @@ export const process = (
 
   if (buffer.length > 0) {
     context.logger.debug(
-      "[Handler2.process] extra bytes leftover, processing again"
+      `[Handler2.process] extra bytes (${buffer.length}) leftover, processing again`
     );
     result.push(...process(buffer, context));
   }
